@@ -36,4 +36,6 @@
 
 - [domain-spec.md](domain-spec.md) — データモデルと計算ロジックの仕様
 - [open-questions.md](open-questions.md) — 検討事項の一覧（再検討・未決定）
+- [architecture.md](architecture.md) — 設計（承認待ち）
+- [implementation-plan.md](implementation-plan.md) — 実装計画（承認待ち）
 - [../design/README.md](../design/README.md) — デザインの仕様
