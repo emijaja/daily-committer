@@ -40,7 +40,7 @@
 | # | タスク | 内容 | 完了の条件 |
 |---|---|---|---|
 | 0-1 | プロジェクト作成 | Next.js ＋ TypeScript（strict）＋ pnpm、ESLint・Prettier、Vitest、Tailwind v4、ディレクトリ構成（architecture.md 2章）、`docker compose`（Postgres） | `pnpm dev` / `pnpm test` / `pnpm lint` が動く |
-| 0-2 | DB・認証 | Drizzle のスキーマ（全テーブル）とマイグレーション、Auth.js（Google）、`requireUser()`、proxy、初回ログイン時の `user_settings` の作成 | Google でログインし、保護されたページが表示できる |
+| 0-2 | DB・認証 | Drizzle のスキーマ（全テーブル）とマイグレーション、Better Auth（Google）、`requireUser()`、proxy、初回ログイン時の `user_settings` の作成 | Google でログインし、保護されたページが表示できる |
 | 0-3 | 型と契約 | `domain/types.ts`、domain の各関数と service の各関数のシグネチャ（中身は空）、テスト用データの作成関数（fixture） | 型チェックが通る。各レーンが参照できる |
 | 0-4 | トークン・部品の基盤 | `tokens.css`（tokens.json から生成）、フォント、PC のスマホ幅固定レイアウト、部品のカタログページ `/dev/components` | カタログページにトークンの見本が出る |
 
