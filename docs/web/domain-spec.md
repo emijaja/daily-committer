@@ -35,7 +35,7 @@ Auth.js が使うテーブル（`users`、`accounts`、`sessions` など）は�
 | name | text | |
 | note | text NULL | 補足 |
 | period | enum `daily` / `weekly` / `monthly` | 周期 |
-| times_per_period | int NULL | 週次・月次の回数の目標（例：週3回）。日次は NULL |
+| times_per_period | int NULL | 週次・月次の**チェックのみ**の習慣の回数の目標（例：週3回）。日次と量の習慣では NULL |
 | record_type | enum `check` / `quantity` | チェックのみ／量も記録 |
 | unit | text NULL | 量の単位（回・km など） |
 | quantity_target | numeric NULL | 量の目標。日次は1日の目標、週次・月次はその期間の目標。NULL なら目標なし |
@@ -78,8 +78,9 @@ Auth.js が使うテーブル（`users`、`accounts`、`sessions` など）は�
   - 日次・チェックのみ：その日に記録がある
   - 日次・量：その日の合計 ≥ `quantity_target`（目標なしなら、量が 0 より大きい）
   - 週次・月次・チェックのみ：その期間に**記録のある日数** ≥ `times_per_period`
-  - 週次・月次・量（目標あり）：その期間の**量の合計** ≥ `quantity_target`（`times_per_period` は判定に使わない）
-  - 週次・月次・量（目標なし）：記録のある日数 ≥ `times_per_period`。回数も未設定なら、1日でも記録があれば達成
+  - 週次・月次・量（目標あり）：その期間の**量の合計** ≥ `quantity_target`
+  - 週次・月次・量（目標なし）：その期間に1日でも記録があれば達成
+  - **量の習慣は回数を持たない**。目標はすべて量で表す（⑤ の「目標」ブロックで、記録方式に応じて回数か量のどちらかを入力する）
   - ※ デザイン①-b ではランニング（量の習慣）の行を「2 / 3 回」と表示しているが、量で判定するので「6.2 / 10 km」の表示に変える必要がある（[open-questions.md](open-questions.md)）。
 - **目標超え**：量の合計 > `quantity_target`。超えた分を「+15」のように表示する。
 
