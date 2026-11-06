@@ -11,7 +11,7 @@
 
 ## 2. テーブル
 
-Auth.js が使うテーブル（`users`、`accounts`、`sessions` など）は省略する。
+Better Auth が使うテーブル（`user`、`session`、`account`、`verification`）は省略する。
 
 ### user_settings（ユーザーごとの設定）
 
@@ -40,7 +40,8 @@ Auth.js が使うテーブル（`users`、`accounts`、`sessions` など）は�
 | unit | text NULL | 量の単位（回・km など） |
 | quantity_target | numeric NULL | 量の目標。日次は1日の目標、週次・月次はその期間の目標。NULL なら目標なし |
 | input_mode | enum `total` / `increment` NULL | 量の入力のしかた（合計を入力／回ごとに足す） |
-| archived_at | timestamptz NULL | NULL 以外なら「過去の習慣」 |
+| created_on | date | 習慣を作った日（ユーザーの1日の日付）。草の分母に使う |
+| archived_on | date NULL | 過去の習慣にした日。NULL なら現在の習慣 |
 | sort_order | int | 一覧での並び順 |
 | created_at | timestamptz | |
 
