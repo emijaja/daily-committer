@@ -1,0 +1,7 @@
+pnpm-lock.yaml
+.next
+drizzle
+coverage
+docs
+AGENTS.md
+CLAUDE.md

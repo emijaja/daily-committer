@@ -115,7 +115,8 @@ tests/e2e/         Playwright
 ## 5. 認証
 
 - Auth.js v5 ＋ Google プロバイダ ＋ Drizzle アダプタ。セッションは DB に保存する。
-- `middleware.ts` で `(main)` と、`(onboarding)` のうち O5・O4 をログイン必須にする（O1〜O3 は公開）。
+- `src/proxy.ts`（Next.js 16 で middleware から改名）で、`(main)` と `(onboarding)` のうち O5・O4 に、セッションの cookie がなければログインへ移動させる（楽観的なチェック）。**本当の権限チェックは server 層の `requireUser()` で必ず行う。**
+- Cache Components が有効なので、セッションを読む部分は `<Suspense>` の内側に置く（レイアウトの最上位で await しない）。
 - 初回ログイン時に `user_settings` を作る（タイムゾーンはブラウザから受け取る）。
 - `onboarded_at` が NULL なら `(main)` からオンボーディングへ移動させる。
 - 画面の流れ：O1 → O2 → O3 → A1 ログイン → O5（習慣を選ぶ）→ O4（通知）→ ①-a。
