@@ -1,0 +1,34 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+/* フォント：本文は Noto Sans JP、英字の見出し・数字・タグは Inter（font-latin） */
+@theme inline {
+  --font-sans: var(--font-noto-jp), sans-serif;
+  --font-latin: var(--font-inter), var(--font-noto-jp), sans-serif;
+}
+
+/* 枠線（visual-style.md「コンポーネント規則」）。色は黒、角丸0 */
+@utility frame {
+  border: var(--stroke-box) solid var(--color-black);
+}
+@utility frame-focus {
+  border: var(--stroke-focus) solid var(--color-black);
+}
+@utility divider-b {
+  border-bottom: var(--stroke-divider) solid var(--color-black);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-gray-100);
+    color: var(--color-black);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}

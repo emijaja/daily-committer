@@ -18,9 +18,9 @@
 |---|---|---|
 | フレームワーク | Next.js（App Router）＋ TypeScript | 画面と API（Route Handlers / Server Actions）を同じアプリに置く |
 | DB | PostgreSQL（マネージド：Neon など） | |
-| ORM | Drizzle ORM（予定） | マイグレーションもこれで管理 |
-| 認証 | Auth.js（Google プロバイダ） | セッションは DB に保存 |
-| スタイル | `docs/design/tokens.json` → CSS 変数 | 方式（Tailwind か CSS Modules か）は実装開始時に決める |
+| ORM | Drizzle ORM | マイグレーションもこれで管理 |
+| 認証 | Better Auth（Google プロバイダ、Drizzle アダプタ） | セッションは DB に保存。Auth.js v5 が beta のままのため変更（2026-11-07） |
+| スタイル | Tailwind CSS v4 | `docs/design/tokens.json` から @theme を生成（`pnpm tokens`） |
 | PWA | Web App Manifest ＋ Service Worker（Serwist などを検討） | |
 | 通知 | Web Push（VAPID、`web-push`） | iOS はホーム画面に追加した PWA でのみ受信できる |
 | ホスティング | Vercel | |

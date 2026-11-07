@@ -11,7 +11,7 @@
 
 ## 2. テーブル
 
-Auth.js が使うテーブル（`users`、`accounts`、`sessions` など）は省略する。
+Better Auth が使うテーブル（`user`、`session`、`account`、`verification`）は省略する。
 
 ### user_settings（ユーザーごとの設定）
 
@@ -35,13 +35,15 @@ Auth.js が使うテーブル（`users`、`accounts`、`sessions` など）は�
 | name | text | |
 | note | text NULL | 補足 |
 | period | enum `daily` / `weekly` / `monthly` | 周期 |
-| times_per_period | int NULL | 週次・月次の**チェックのみ**の習慣の回数の目標（例：週3回）。日次と量の習慣では NULL |
+| times_per_period | int NULL | 週次・月次の**チェックのみ**の習慣の回数の目標（例：週3回）。この場合は必須（1以上）。日次と量の習慣では NULL |
 | record_type | enum `check` / `quantity` | チェックのみ／量も記録 |
 | unit | text NULL | 量の単位（回・km など） |
 | quantity_target | numeric NULL | 量の目標。日次は1日の目標、週次・月次はその期間の目標。NULL なら目標なし |
 | input_mode | enum `total` / `increment` NULL | 量の入力のしかた（合計を入力／回ごとに足す） |
-| archived_at | timestamptz NULL | NULL 以外なら「過去の習慣」 |
+| created_on | date | 習慣を作った日（ユーザーの1日の日付）。草の分母に使う |
+| archived_on | date NULL | 過去の習慣にした日。NULL なら現在の習慣 |
 | sort_order | int | 一覧での並び順 |
+| multiple_per_day | boolean（生成列） | `input_mode = 'increment'` なら true。DB が自動で計算する。entries の一意制約に使う |
 | created_at | timestamptz | |
 
 ### entries（記録）
@@ -51,12 +53,15 @@ Auth.js が使うテーブル（`users`、`accounts`、`sessions` など）は�
 | id | uuid | |
 | habit_id | FK | |
 | user_id | FK | 権限チェックと集計のため、重複して持つ |
+| multiple_per_day | boolean | 習慣の `multiple_per_day` の写し。記録を作るときは習慣と同じ値を入れる |
 | date | date | 記録した日（ユーザーの暦の日付） |
 | quantity | numeric NULL | チェックのみの習慣では NULL |
 | created_at | timestamptz | |
 
-- **チェックのみ**・**合計を入力**の習慣：`(habit_id, date)` で一意にする（1日1行。合計の入力では上書きする）。
+- **チェックのみ**・**合計を入力**の習慣：`(habit_id, date)` で一意にする（1日1行。合計の入力では上書きする）。DB では `multiple_per_day = false` の行に限った部分一意インデックスで守る。upsert は `on conflict (habit_id, date) where not multiple_per_day` を使う。
 - **回ごとに足す**の習慣：1日に複数行を持てる（⑧-b の記録の一覧に1行ずつ表示する）。
+- `(habit_id, user_id, multiple_per_day)` は habits への複合外部キー。記録の持ち主と習慣の持ち主が必ず一致し、習慣の入力のしかたを変えると entries の `multiple_per_day` も自動で変わる。
+  - 「回ごとに足す」から別の入力のしかたに変えるときは、同じ日の複数行を先に1行にまとめる（まとめないと一意制約で失敗する）。
 - 週次・月次の習慣も、記録は日付つきで持つ。①-b の曜日の四角は「その日に記録があるか」を表す。
 - チェックを外したときは行を削除する（論理削除はしない）。
 

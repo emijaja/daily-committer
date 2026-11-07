@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1793979377031,
+      "tag": "0000_numerous_squadron_supreme",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794064093860,
+      "tag": "0001_graceful_giant_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794064361016,
+      "tag": "0002_open_colonel_america",
+      "breakpoints": true
+    }
+  ]
+}

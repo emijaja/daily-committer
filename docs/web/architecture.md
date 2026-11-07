@@ -57,7 +57,7 @@ src/
       habits/[id]/edit/                ⑤-b
       settings/                        ⑦
     api/
-      auth/[...nextauth]/route.ts      Auth.js
+      auth/[...all]/route.ts           Better Auth
       export/route.ts                  CSV 書き出し
       cron/reminders/route.ts          定時の Push 送信
     dev/components/page.tsx            部品のカタログ（開発環境のみ）
@@ -72,7 +72,7 @@ src/
     grumble.ts     キャラのセリフの選択
     types.ts       Habit, Entry, Settings など
   server/
-    auth.ts        Auth.js の設定、requireUser()
+    auth.ts        Better Auth の設定、requireUser()
     repositories/  habits.ts, entries.ts, settings.ts, push.ts
     services/      record.ts, habits.ts, review.ts, onboarding.ts, account.ts
     actions/       Server Actions（画面から呼ぶ入口。zod で入力を検証）
@@ -114,8 +114,9 @@ tests/e2e/         Playwright
 
 ## 5. 認証
 
-- Auth.js v5 ＋ Google プロバイダ ＋ Drizzle アダプタ。セッションは DB に保存する。
-- `middleware.ts` で `(main)` と、`(onboarding)` のうち O5・O4 をログイン必須にする（O1〜O3 は公開）。
+- Better Auth ＋ Google プロバイダ ＋ Drizzle アダプタ。セッションは DB に保存する。
+- `src/proxy.ts`（Next.js 16 で middleware から改名）で、`(main)` と `(onboarding)` のうち O5・O4 に、セッションの cookie がなければログインへ移動させる（楽観的なチェック）。**本当の権限チェックは server 層の `requireUser()` で必ず行う。**
+- Cache Components が有効なので、セッションを読む部分は `<Suspense>` の内側に置く（レイアウトの最上位で await しない）。
 - 初回ログイン時に `user_settings` を作る（タイムゾーンはブラウザから受け取る）。
 - `onboarded_at` が NULL なら `(main)` からオンボーディングへ移動させる。
 - 画面の流れ：O1 → O2 → O3 → A1 ログイン → O5（習慣を選ぶ）→ O4（通知）→ ①-a。
@@ -145,7 +146,7 @@ tests/e2e/         Playwright
 
 - スタイル：**Tailwind CSS v4**（`@theme` に tokens.json の値を入れる）を推奨する。部品が多く、並行して開発する人の間で書き方を揃えやすいため。→ 承認事項
 - アイコン・キャラは Figma から SVG で書き出し、React コンポーネントにする。
-- PC では `max-width: 375px` で中央に表示する。
+- 画面の列は `max-width: 430px` で中央に表示する（PC では固定幅、スマホでは幅いっぱい。デザインは 375 幅で、430 幅の機種まで横に広がる）。
 
 ## 7. PWA と通知
 
