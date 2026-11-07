@@ -19,7 +19,7 @@ export interface Habit {
   note: string | null;
   period: Period;
   recordType: RecordType;
-  /** 週次・月次のチェックのみの習慣の回数の目標。日次と量の習慣では null */
+  /** 週次・月次のチェックのみの習慣の回数の目標（この場合は必須）。日次と量の習慣では null */
   timesPerPeriod: number | null;
   /** 量の単位。チェックのみでは null */
   unit: string | null;

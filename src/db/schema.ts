@@ -97,9 +97,11 @@ export const habits = pgTable(
       sql`(${t.recordType} = 'check' and ${t.unit} is null and ${t.quantityTarget} is null and ${t.inputMode} is null)
        or (${t.recordType} = 'quantity' and ${t.unit} is not null and ${t.inputMode} is not null and ${t.timesPerPeriod} is null)`,
     ),
+    // 回数の目標は週次・月次のチェックのみの習慣だけが持ち、その場合は必須（domain-spec.md 2章・4章）
     check(
       "times_per_period_scope",
-      sql`${t.timesPerPeriod} is null or (${t.period} <> 'daily' and ${t.timesPerPeriod} > 0)`,
+      sql`(${t.recordType} = 'check' and ${t.period} <> 'daily' and ${t.timesPerPeriod} is not null and ${t.timesPerPeriod} > 0)
+       or ((${t.recordType} = 'quantity' or ${t.period} = 'daily') and ${t.timesPerPeriod} is null)`,
     ),
   ],
 );

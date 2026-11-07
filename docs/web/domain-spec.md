@@ -35,7 +35,7 @@ Better Auth が使うテーブル（`user`、`session`、`account`、`verificati
 | name | text | |
 | note | text NULL | 補足 |
 | period | enum `daily` / `weekly` / `monthly` | 周期 |
-| times_per_period | int NULL | 週次・月次の**チェックのみ**の習慣の回数の目標（例：週3回）。日次と量の習慣では NULL |
+| times_per_period | int NULL | 週次・月次の**チェックのみ**の習慣の回数の目標（例：週3回）。この場合は必須（1以上）。日次と量の習慣では NULL |
 | record_type | enum `check` / `quantity` | チェックのみ／量も記録 |
 | unit | text NULL | 量の単位（回・km など） |
 | quantity_target | numeric NULL | 量の目標。日次は1日の目標、週次・月次はその期間の目標。NULL なら目標なし |

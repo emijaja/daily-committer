@@ -1,0 +1,3 @@
+ALTER TABLE "habits" DROP CONSTRAINT "times_per_period_scope";--> statement-breakpoint
+ALTER TABLE "habits" ADD CONSTRAINT "times_per_period_scope" CHECK (("habits"."record_type" = 'check' and "habits"."period" <> 'daily' and "habits"."times_per_period" is not null and "habits"."times_per_period" > 0)
+       or (("habits"."record_type" = 'quantity' or "habits"."period" = 'daily') and "habits"."times_per_period" is null));
