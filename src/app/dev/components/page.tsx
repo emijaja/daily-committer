@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { BasicSection } from "./section-basic";
 import { CharacterSection } from "./section-character";
+import { FormSection } from "./section-form";
 import { GrassSection } from "./section-grass";
 import { RecordSection } from "./section-record";
 import { SheetSection } from "./section-sheet";
@@ -49,6 +50,35 @@ const texts = [
   { cls: "font-latin text-tag", label: "tag", sample: "STREAK 6" },
 ] as const;
 
+const INDEX = [
+  ["pill", "Pill"],
+  ["tag", "Tag"],
+  ["marker", "Marker"],
+  ["screen-header", "ScreenHeader"],
+  ["segment-tabs", "SegmentTabs"],
+  ["tab-bar", "TabBar"],
+  ["check-box", "CheckBox"],
+  ["progress-bar", "ProgressBar"],
+  ["week-dots", "WeekDots"],
+  ["habit-row", "HabitRow"],
+  ["section-heading", "SectionHeading"],
+  ["summary-card", "SummaryCard"],
+  ["toast", "Toast"],
+  ["mascot", "Mascot"],
+  ["speech", "Speech"],
+  ["grass", "GrassHeatmap"],
+  ["calendar-modal", "CalendarModal"],
+  ["stat-box", "StatBox"],
+  ["num-pad", "NumPad"],
+  ["bottom-sheet", "BottomSheet"],
+  ["quantity-total-sheet", "QuantityTotalSheet"],
+  ["quantity-increment-sheet", "QuantityIncrementSheet"],
+  ["form", "フォーム"],
+  ["goal-block", "GoalBlock"],
+  ["number-stepper", "NumberStepper"],
+  ["empty-state", "EmptyState"],
+] as const;
+
 export default function ComponentsCatalog() {
   if (process.env.NODE_ENV === "production") notFound();
 
@@ -56,6 +86,18 @@ export default function ComponentsCatalog() {
     <main className="px-screen-x py-8">
       <h1 className="font-latin text-display">Catalog</h1>
       <p className="text-subtitle-ja">部品のカタログ（開発環境のみ）</p>
+
+      <nav aria-label="部品の一覧" className="mt-4">
+        <ul className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold">
+          {INDEX.map(([id, label]) => (
+            <li key={id}>
+              <a href={`#${id}`} className="underline underline-offset-2">
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
       <section className="mt-8">
         <h2 className="text-row-title">色</h2>
@@ -107,6 +149,7 @@ export default function ComponentsCatalog() {
       <CharacterSection />
       <GrassSection />
       <SheetSection />
+      <FormSection />
     </main>
   );
 }

@@ -1,8 +1,36 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { AddButton, CheckBox } from "./CheckBox";
+import { SegmentedControl, Toggle } from "./forms";
 import { ProgressBar } from "./ProgressBar";
 import { WeekDots } from "./WeekDots";
+
+describe("フォーム部品", () => {
+  it("SegmentedControl は radiogroup と radio で選択中を示す", () => {
+    const html = renderToStaticMarkup(
+      <SegmentedControl
+        label="周期"
+        value="weekly"
+        onChange={() => {}}
+        options={[
+          { value: "daily", label: "毎日" },
+          { value: "weekly", label: "毎週" },
+        ]}
+      />,
+    );
+    expect(html).toContain('role="radiogroup"');
+    expect(html.match(/aria-checked="true"/g)).toHaveLength(1);
+    expect(html.match(/role="radio"/g)).toHaveLength(2);
+  });
+
+  it("Toggle は role=switch と aria-checked を持つ", () => {
+    const html = renderToStaticMarkup(
+      <Toggle label="ぼやきを表示" checked onChange={() => {}} />,
+    );
+    expect(html).toContain('role="switch"');
+    expect(html).toContain('aria-checked="true"');
+  });
+});
 
 describe("CheckBox", () => {
   it("button 要素で role=checkbox と aria-checked を持つ", () => {
