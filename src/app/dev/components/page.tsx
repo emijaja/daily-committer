@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { BasicSection } from "./section-basic";
+import { RecordSection } from "./section-record";
 
 /**
  * 部品のカタログ（開発環境のみ）。レーン B の部品はここに並べて Figma と見比べる。
@@ -99,6 +100,7 @@ export default function ComponentsCatalog() {
       </section>
 
       <BasicSection />
+      <RecordSection />
     </main>
   );
 }
