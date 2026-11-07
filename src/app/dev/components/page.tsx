@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { BasicSection } from "./section-basic";
 
 /**
  * 部品のカタログ（開発環境のみ）。レーン B の部品はここに並べて Figma と見比べる。
@@ -96,6 +97,8 @@ export default function ComponentsCatalog() {
           </div>
         </div>
       </section>
+
+      <BasicSection />
     </main>
   );
 }
