@@ -2,15 +2,7 @@
 
 import { use, useState } from "react";
 import { authClient } from "@/lib/auth-client";
-
-/** ログイン後に戻る先。外部への移動を防ぐため、/ で始まる相対パスだけ許す */
-function safeNext(next: unknown): string {
-  return typeof next === "string" &&
-    next.startsWith("/") &&
-    !next.startsWith("//")
-    ? next
-    : "/record/today";
-}
+import { safeNext } from "@/lib/safe-next";
 
 export function GoogleSignInButton({
   searchParams,
@@ -19,21 +11,40 @@ export function GoogleSignInButton({
 }) {
   const { next } = use(searchParams);
   const [pending, setPending] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  async function signIn() {
+    setPending(true);
+    setFailed(false);
+    try {
+      const { error } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: safeNext(next),
+      });
+      // 成功すると Google の画面へ移るので、ここに来るのは失敗したときだけ
+      if (error) throw error;
+    } catch (e) {
+      console.error("Google ログインを始められませんでした", e);
+      setFailed(true);
+      setPending(false);
+    }
+  }
 
   return (
-    <button
-      type="button"
-      disabled={pending}
-      onClick={async () => {
-        setPending(true);
-        await authClient.signIn.social({
-          provider: "google",
-          callbackURL: safeNext(next),
-        });
-      }}
-      className="rounded-pill h-(--size-button-height) bg-black font-bold text-white disabled:opacity-60"
-    >
-      Google でログイン
-    </button>
+    <div className="flex flex-col gap-3">
+      <button
+        type="button"
+        disabled={pending}
+        onClick={signIn}
+        className="rounded-pill h-(--size-button-height) bg-black font-bold text-white disabled:opacity-60"
+      >
+        Google でログイン
+      </button>
+      {failed && (
+        <p role="alert" className="text-caption text-center">
+          ログインを始められませんでした。時間をおいて、もう一度お試しください。
+        </p>
+      )}
+    </div>
   );
 }
