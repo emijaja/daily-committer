@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:integration": "vitest run --config vitest.integration.config.mts",
     "db:up": "docker compose up -d db",
     "db:down": "docker compose down",
     "tokens": "node scripts/gen-tokens.mjs && prettier --write src/styles/tokens.css",
