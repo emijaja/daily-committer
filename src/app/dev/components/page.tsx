@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { BasicSection } from "./section-basic";
 import { CharacterSection } from "./section-character";
+import { GrassSection } from "./section-grass";
 import { RecordSection } from "./section-record";
 
 /**
@@ -103,6 +104,7 @@ export default function ComponentsCatalog() {
       <BasicSection />
       <RecordSection />
       <CharacterSection />
+      <GrassSection />
     </main>
   );
 }

@@ -44,3 +44,24 @@ export function Sample({
     </div>
   );
 }
+
+/**
+ * 画面に固定して出す部品（モーダル・シート）を、枠の中に開いたまま見せる。
+ * transform を持つ要素の中では position: fixed がその要素基準になることを使う。
+ */
+export function FixedFrame({
+  height,
+  children,
+}: {
+  height: number;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className="-mx-screen-x relative [transform:translateZ(0)] overflow-hidden bg-white"
+      style={{ height }}
+    >
+      {children}
+    </div>
+  );
+}
