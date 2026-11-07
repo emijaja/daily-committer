@@ -6,6 +6,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { db } from "@/db/client";
+import { RETURN_TO_HEADER } from "@/lib/return-to";
+import { safeNext } from "@/lib/safe-next";
 import { requiredEnv } from "@/lib/server-env";
 import {
   account,
@@ -67,9 +69,17 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   return { id, name, email, image: image ?? null };
 });
 
-/** ログイン必須の処理の入口。ログインしていなければログイン画面へ移動する */
+/**
+ * ログイン必須の処理の入口。ログインしていなければログイン画面へ移動する。
+ * proxy.ts が入れた今のパスを next に付け、ログイン後に元の画面へ戻れるようにする。
+ */
 export async function requireUser(): Promise<CurrentUser> {
   const current = await getCurrentUser();
-  if (!current) redirect("/login");
-  return current;
+  if (current) return current;
+  const returnTo = (await headers()).get(RETURN_TO_HEADER);
+  redirect(
+    returnTo
+      ? `/login?next=${encodeURIComponent(safeNext(returnTo))}`
+      : "/login",
+  );
 }
