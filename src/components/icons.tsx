@@ -64,9 +64,9 @@ const ICONS: Record<IconName, IconDef> = {
     d: "M7 4H17.5V16H7L2 10L7 4ZM10 7.5L14 12.5M14 7.5L10 12.5",
   },
   target: {
-    viewBox: 16,
-    strokeWidth: 1.8,
-    d: "M8 2A6 6 0 1 0 8 14A6 6 0 1 0 8 2ZM8 5.5A2.5 2.5 0 1 0 8 10.5A2.5 2.5 0 1 0 8 5.5Z",
+    viewBox: 14,
+    strokeWidth: 1.4,
+    d: "M7 1.75A5.25 5.25 0 1 0 7 12.25A5.25 5.25 0 1 0 7 1.75ZM7 4.8125A2.1875 2.1875 0 1 0 7 9.1875A2.1875 2.1875 0 1 0 7 4.8125Z",
   },
   "tab-record": {
     viewBox: 22,
