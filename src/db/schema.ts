@@ -4,6 +4,7 @@ import {
   boolean,
   check,
   date,
+  foreignKey,
   index,
   integer,
   numeric,
@@ -13,6 +14,8 @@ import {
   text,
   time,
   timestamp,
+  unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
@@ -72,10 +75,23 @@ export const habits = pgTable(
     /** 過去の習慣にした日。null なら現在の習慣 */
     archivedOn: date("archived_on", { mode: "string" }),
     sortOrder: integer("sort_order").notNull().default(0),
+    /**
+     * 1日に複数の記録を持てるか（「回ごとに足す」の習慣だけ true）。input_mode から DB が計算する。
+     * entries の一意制約に使う（entries.multiple_per_day を参照）
+     */
+    multiplePerDay: boolean("multiple_per_day")
+      .notNull()
+      .generatedAlwaysAs(sql`input_mode is not distinct from 'increment'`),
     createdAt: createdAt(),
   },
   (t) => [
     index("habits_user_idx").on(t.userId, t.archivedOn),
+    // entries からの複合外部キーの参照先
+    unique("habits_id_user_multiple_unique").on(
+      t.id,
+      t.userId,
+      t.multiplePerDay,
+    ),
     check(
       "quantity_fields",
       sql`(${t.recordType} = 'check' and ${t.unit} is null and ${t.quantityTarget} is null and ${t.inputMode} is null)
@@ -92,15 +108,31 @@ export const entries = pgTable(
   "entries",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    habitId: uuid("habit_id")
-      .notNull()
-      .references(() => habits.id, { onDelete: "cascade" }),
+    habitId: uuid("habit_id").notNull(),
     userId: userId(),
+    /**
+     * 習慣の multiple_per_day の写し。記録を作るときは習慣と同じ値を入れる
+     * （違うと外部キーで弾かれる）。習慣の入力のしかたが変わると自動で追従する。
+     */
+    multiplePerDay: boolean("multiple_per_day").notNull(),
     date: date("date", { mode: "string" }).notNull(),
     quantity: numeric("quantity", { precision: 12, scale: 3, mode: "number" }),
     createdAt: createdAt(),
   },
   (t) => [
+    // 記録の user_id と習慣の持ち主が必ず一致するようにする（他人の習慣に記録を付けられない）
+    foreignKey({
+      name: "entries_habit_fk",
+      columns: [t.habitId, t.userId, t.multiplePerDay],
+      foreignColumns: [habits.id, habits.userId, habits.multiplePerDay],
+    })
+      .onDelete("cascade")
+      .onUpdate("cascade"),
+    // チェックのみ・合計を入力の習慣は1日1行（domain-spec.md 2章）。
+    // 同時に2回押されても2行にならず、upsert の衝突先にも使える
+    uniqueIndex("entries_habit_date_single_unique")
+      .on(t.habitId, t.date)
+      .where(sql`not ${t.multiplePerDay}`),
     index("entries_user_date_idx").on(t.userId, t.date),
     index("entries_habit_date_idx").on(t.habitId, t.date),
   ],
