@@ -4,14 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /**
- * 下部タブ（仮）。黒地、選択中は白・非選択は tabbar-inactive（visual-style.md）。
+ * 下部タブ（仮）。記録／振り返り／習慣の3つ（product-and-flow.md）。⑦ 設定は ①の歯車から開く。黒地、選択中は白・非選択は tabbar-inactive（visual-style.md）。
  * TODO: レーンB の TabBar（src/components/）ができたら差し替える。アイコンもそちらで付く。
  */
 const TABS = [
   { label: "記録", href: "/record/today", match: "/record" },
   { label: "振り返り", href: "/review", match: "/review" },
   { label: "習慣", href: "/habits", match: "/habits" },
-  { label: "設定", href: "/settings", match: "/settings" },
 ] as const;
 
 export function TabBar() {
