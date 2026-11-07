@@ -132,7 +132,7 @@ export function CalendarModal({
                 HIT_AREA,
               )}
             >
-              <Icon name="close" size={18} strokeWidth={2.2} />
+              <Icon name="close" size={20} />
             </button>
           </div>
         </div>

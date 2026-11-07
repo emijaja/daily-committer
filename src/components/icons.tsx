@@ -52,16 +52,16 @@ const ICONS: Record<IconName, IconDef> = {
   plus: { viewBox: 16, strokeWidth: 2, d: "M8 3V13M3 8H13" },
   minus: { viewBox: 16, strokeWidth: 2, d: "M3 8H13" },
   check: { viewBox: 16, strokeWidth: 2.2, d: "M3 8.5L6 11.5L13 4.5" },
-  close: { viewBox: 16, strokeWidth: 2, d: "M4 4L12 12M12 4L4 12" },
+  close: { viewBox: 20, strokeWidth: 2.25, d: "M5 5L15 15M15 5L5 15" },
   pencil: {
     viewBox: 20,
     strokeWidth: 2,
     d: "M13.125 3.125L16.875 6.875L7.5 16.25H3.75V12.5L13.125 3.125Z",
   },
   backspace: {
-    viewBox: 20,
+    viewBox: 18,
     strokeWidth: 1.8,
-    d: "M7 4H17.5V16H7L2 10L7 4ZM10 7.5L14 12.5M14 7.5L10 12.5",
+    d: "M11.25 6.75L7.875 11.25M7.875 6.75L11.25 11.25M5.625 3.375H15.75V14.625H5.625L1.125 9L5.625 3.375Z",
   },
   target: {
     viewBox: 14,

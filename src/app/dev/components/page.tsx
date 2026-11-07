@@ -3,6 +3,7 @@ import { BasicSection } from "./section-basic";
 import { CharacterSection } from "./section-character";
 import { GrassSection } from "./section-grass";
 import { RecordSection } from "./section-record";
+import { SheetSection } from "./section-sheet";
 
 /**
  * 部品のカタログ（開発環境のみ）。レーン B の部品はここに並べて Figma と見比べる。
@@ -105,6 +106,7 @@ export default function ComponentsCatalog() {
       <RecordSection />
       <CharacterSection />
       <GrassSection />
+      <SheetSection />
     </main>
   );
 }
