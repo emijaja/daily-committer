@@ -1,6 +1,7 @@
 import { notImplemented } from "@/domain/not-implemented";
 import type { Settings, UserId } from "./types";
 
+/** 行がなければ ensureUserSettings()（server/auth.ts）で既定値の行を作ってから返す */
 export async function getSettings(userId: UserId): Promise<Settings> {
   return notImplemented(`getSettings(${userId})`);
 }

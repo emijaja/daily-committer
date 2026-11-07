@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { db } from "@/db/client";
+import { requiredEnv } from "@/lib/server-env";
 import {
   account,
   session,
@@ -21,20 +22,20 @@ export const auth = betterAuth({
   }),
   socialProviders: {
     google: {
-      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+      clientId: requiredEnv("GOOGLE_CLIENT_ID"),
+      clientSecret: requiredEnv("GOOGLE_CLIENT_SECRET"),
       prompt: "select_account",
     },
   },
   databaseHooks: {
-    user: {
+    session: {
       create: {
-        // 初回ログイン時に設定の行を作る。タイムゾーンはあとでブラウザの値に更新する
+        // ログインのたびに設定の行があるか確かめ、なければ作る。
+        // ユーザーの作成時だけにすると、そこで失敗したとき二度と作られないため。
+        // ここで失敗するとログインも失敗するので、もう一度ログインすれば作り直せる。
+        // タイムゾーンはあとでブラウザの値に更新する（オンボーディング）
         after: async (created) => {
-          await db
-            .insert(userSettings)
-            .values({ userId: created.id })
-            .onConflictDoNothing();
+          await ensureUserSettings(created.userId);
         },
       },
     },
@@ -42,6 +43,11 @@ export const auth = betterAuth({
   // Server Actions から cookie を書けるようにする（必ず最後に置く）
   plugins: [nextCookies()],
 });
+
+/** user_settings の行がなければ既定値で作る（あれば何もしない） */
+export async function ensureUserSettings(userId: string): Promise<void> {
+  await db.insert(userSettings).values({ userId }).onConflictDoNothing();
+}
 
 export interface CurrentUser {
   id: string;
