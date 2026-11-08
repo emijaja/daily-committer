@@ -96,6 +96,16 @@ export function FormSection() {
             unit="km"
           />
         </Sample>
+        <Sample label="数字をタップして直接入力（editable・小数3桁まで）">
+          <NumberStepper
+            label="1週間の目標"
+            value={stepper}
+            onChange={setStepper}
+            unit="km"
+            editable
+            decimals={3}
+          />
+        </Sample>
         <Sample label="最小に達した（− は押せない）">
           <NumberStepper
             label="回数"
