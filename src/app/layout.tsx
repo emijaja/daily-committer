@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
+import { ServiceWorkerRegistration } from "./service-worker-registration";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const notoJp = Noto_Sans_JP({
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <div className="mx-auto min-h-dvh w-full max-w-[430px] bg-white">
           {children}
         </div>
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );

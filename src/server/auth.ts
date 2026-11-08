@@ -1,5 +1,6 @@
 import "server-only";
 import { betterAuth } from "better-auth";
+import { eq } from "drizzle-orm";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { headers } from "next/headers";
@@ -49,6 +50,20 @@ export const auth = betterAuth({
 /** user_settings の行がなければ既定値で作る（あれば何もしない） */
 export async function ensureUserSettings(userId: string): Promise<void> {
   await db.insert(userSettings).values({ userId }).onConflictDoNothing();
+}
+
+/**
+ * オンボーディングを終えているか（user_settings.onboarded_at が入っているか）。
+ * 設定の行がない場合も「終えていない」とみなす。
+ * TODO: レーンC の settings の repository / service ができたら、そちらを使う形に移す
+ */
+export async function isOnboarded(userId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ onboardedAt: userSettings.onboardedAt })
+    .from(userSettings)
+    .where(eq(userSettings.userId, userId))
+    .limit(1);
+  return row?.onboardedAt != null;
 }
 
 export interface CurrentUser {

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#ffffff" />
+    <title>接続してください | Confidently</title>
+    <!--
+      オフラインのときに Service Worker（public/sw.js）が返すページ。
+      ネットワークなしで表示するため、CSS とフォントは読み込まずにここに直接書く。
+      色・文字の大きさはトークン（docs/design/tokens.json）に合わせている。
+    -->
+    <style>
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        margin: 0;
+        background: #f2f2f2;
+        color: #000000;
+        font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      main {
+        box-sizing: border-box;
+        margin: 0 auto;
+        min-height: 100dvh;
+        max-width: 430px;
+        padding: 64px 20px;
+        background: #ffffff;
+      }
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 800;
+      }
+      p {
+        margin: 14px 0 0;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.55;
+      }
+      button {
+        margin-top: 28px;
+        width: 100%;
+        height: 52px;
+        border: 0;
+        border-radius: 999px;
+        background: #000000;
+        color: #ffffff;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>接続してください</h1>
+      <p>
+        インターネットにつながっていません。<br />接続してから、もう一度開いてください。
+      </p>
+      <button type="button" onclick="location.reload()">
+        もう一度読み込む
+      </button>
+    </main>
+  </body>
+</html>
