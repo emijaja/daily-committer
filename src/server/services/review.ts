@@ -5,12 +5,19 @@
  */
 import "server-only";
 import { db } from "@/db/client";
-import { yearRange } from "@/domain/date";
+import { splitDate, yearRange } from "@/domain/date";
 import { notImplemented } from "@/domain/not-implemented";
 import { allHabitsGrass, countRecords, habitGrass } from "@/domain/grass";
 import { isActiveOn } from "@/domain/habit";
+import {
+  buildHabitStats,
+  habitDetailGrassRange,
+  selectHabitDetailGrumble,
+  STREAK_UNIT,
+} from "@/domain/habit-detail";
 import { buildAchievements, buildAlmostThere } from "@/domain/review";
 import { selectReviewGrumble } from "@/domain/review-grumble";
+import { currentStreak, isPersonalBest, longestStreak } from "@/domain/streak";
 import type {
   DateRange,
   Entry,
@@ -167,13 +174,61 @@ export async function getDayEditView(
   return notImplemented(`getDayEditView(${userId}, ${date})`);
 }
 
-/** ③ 習慣の詳細 */
+/**
+ * ③ 習慣の詳細。過去の習慣も表示できる。他人の習慣・存在しない ID は null。
+ * - いまの連続・最長連続・自己ベストは作った日からのすべての記録で数える（domain/streak.ts）
+ * - 草は直近1年の2値（domain/habit-detail.ts の範囲）
+ */
 export async function getHabitDetail(
   userId: UserId,
   habitId: string,
   now: Date = new Date(),
 ): Promise<HabitDetailView | null> {
-  return notImplemented(
-    `getHabitDetail(${userId}, ${habitId}, ${now.toISOString()})`,
+  const { settings, today, habits, entries } = await loadReviewSource(
+    userId,
+    now,
+    (all, today) => {
+      const habit = all.find((h) => h.id === habitId);
+      if (!habit) return { start: today, end: today };
+      const grassRange = habitDetailGrassRange(habit, today);
+      return {
+        start: minDate(
+          minDate(habit.createdOn, grassRange.start),
+          yearRange(splitDate(today)[0]).start,
+        ),
+        end: today,
+      };
+    },
   );
+  const habit = habits.find((h) => h.id === habitId);
+  if (!habit) return null;
+
+  const own = entries.filter((e) => e.habitId === habit.id);
+  const input = { habit, entries: own, today, weekStart: settings.weekStart };
+  const current = currentStreak(input);
+  const longest = longestStreak(input);
+  const personalBest = isPersonalBest(input);
+  const grassRange = habitDetailGrassRange(habit, today);
+  const grass = habitGrass(habit.id, own, grassRange);
+
+  return {
+    habit,
+    today,
+    weekStart: settings.weekStart,
+    streakUnit: STREAK_UNIT[habit.period],
+    currentStreak: current,
+    longestStreak: longest,
+    isPersonalBest: personalBest,
+    grass,
+    stats: buildHabitStats(input, longest),
+    grumble: settings.grumbleEnabled
+      ? selectHabitDetailGrumble({
+          habit,
+          currentStreak: current,
+          isPersonalBest: personalBest,
+          hasRecords: grass.some((c) => c.level > 0),
+          today,
+        })
+      : null,
+  };
 }

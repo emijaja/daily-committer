@@ -111,9 +111,15 @@ export interface DayEditView {
 
 export interface HabitDetailView {
   habit: Habit;
+  /** サーバーで決めた今日（草の未来のマス） */
+  today: LogicalDate;
+  weekStart: WeekStart;
+  /** 連続の単位（日次は日、週次は週、月次はか月） */
+  streakUnit: string;
   currentStreak: number;
   longestStreak: number;
   isPersonalBest: boolean;
+  /** 直近1年（365日）の2値の草。過去の習慣は過去にした日の前の日まで */
   grass: GrassCell[];
   /** 今月の達成日数など、数字の箱4つ */
   stats: { label: string; value: string; unit?: string }[];
