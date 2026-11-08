@@ -48,6 +48,7 @@ import {
 import {
   dayEditCaption,
   dayEditWeekDays,
+  editHint,
   monthHeading,
   weekHeading,
 } from "./day-edit-format";
@@ -389,6 +390,7 @@ export function DayEditScreen({ view }: { view: DayEditView }) {
   }
 
   const hasRows = daily.length + weekly.length + monthly.length > 0;
+  const hint = editHint(weekly.length > 0, monthly.length > 0);
 
   return (
     <div className="px-screen-x">
@@ -440,9 +442,9 @@ export function DayEditScreen({ view }: { view: DayEditView }) {
           </HabitList>
         </section>
       ) : null}
-      {weekly.length + monthly.length > 0 ? (
+      {hint ? (
         <p className="text-caption mt-4">
-          <Marker>週次は曜日を、月次は右のボタンをタップして修正します</Marker>
+          <Marker>{hint}</Marker>
         </p>
       ) : null}
 

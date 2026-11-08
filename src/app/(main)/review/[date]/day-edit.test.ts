@@ -6,6 +6,7 @@ import {
   dateNavLabel,
   dayEditCaption,
   dayEditWeekDays,
+  editHint,
   monthHeading,
   weekHeading,
 } from "./day-edit-format";
@@ -140,5 +141,20 @@ describe("dayEditWeekDays", () => {
       true,
       true,
     ]);
+  });
+});
+
+describe("週次・月次の補足", () => {
+  it("行がある周期の分だけ書き、どちらもなければ出さない", () => {
+    expect(editHint(true, true)).toBe(
+      "週次は曜日を、月次は右のボタンをタップして、その日の分を直します",
+    );
+    expect(editHint(true, false)).toBe(
+      "週次は曜日をタップして、その日の分を直します",
+    );
+    expect(editHint(false, true)).toBe(
+      "月次は右のボタンをタップして、この日の分を直します",
+    );
+    expect(editHint(false, false)).toBeNull();
   });
 });
