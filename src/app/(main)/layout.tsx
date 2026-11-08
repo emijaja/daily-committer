@@ -25,11 +25,12 @@ export default function MainLayout({ children }: LayoutProps<"/">) {
 }
 
 /**
- * ログインしていなければログインへ、オンボーディング前（onboarded_at が NULL）ならオンボーディングへ移す。
+ * ログインしていなければログインへ、オンボーディング前（onboarded_at が NULL）なら O5 へ移す。
+ * ログイン済みなので、説明の O1〜O3 と A1 は飛ばして「最初の習慣を選ぶ」から始める。
  * 表示するものはない。
  */
 async function OnboardingGate() {
   const user = await requireUser();
-  if (!(await isOnboarded(user.id))) redirect("/onboarding");
+  if (!(await isOnboarded(user.id))) redirect("/onboarding/start");
   return null;
 }
