@@ -199,10 +199,13 @@ export async function setSortOrders(
   userId: string,
   orderedIds: readonly string[],
 ): Promise<void> {
-  for (const [index, id] of orderedIds.entries()) {
-    await exec
-      .update(habits)
-      .set({ sortOrder: index })
-      .where(and(eq(habits.id, id), eq(habits.userId, userId)));
-  }
+  if (orderedIds.length === 0) return;
+  // 1回の UPDATE にまとめる：sort_order = case when id = … then 0 when … then 1 … end
+  const cases = orderedIds.map(
+    (id, index) => sql`when ${habits.id} = ${id} then ${index}::integer`,
+  );
+  await exec
+    .update(habits)
+    .set({ sortOrder: sql`case ${sql.join(cases, sql` `)} end` })
+    .where(and(eq(habits.userId, userId), inArray(habits.id, orderedIds)));
 }
