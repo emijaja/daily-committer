@@ -398,7 +398,7 @@ export function DayEditScreen({ view }: { view: DayEditView }) {
           expression="sleepy"
           mascotSize={180}
           title="この日の習慣はありません"
-          description="この日に続けていた習慣は、いまはすべて過去の習慣です。"
+          description="この日に続けていた習慣はありません。"
         />
       ) : null}
       {daily.length > 0 ? (
