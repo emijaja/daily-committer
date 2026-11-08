@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { AddButton, CheckBox } from "./CheckBox";
 import { NumberStepper, SegmentedControl, Toggle } from "./forms";
+import { PresetChips } from "./PresetChips";
 import { ProgressBar } from "./ProgressBar";
 import { WeekDots } from "./WeekDots";
 
@@ -123,5 +124,25 @@ describe("WeekDots", () => {
     expect(html.match(/<button/g)).toHaveLength(3);
     expect(html).toContain('aria-pressed="true"');
     expect(html.match(/disabled=""/g)).toHaveLength(1);
+  });
+});
+
+describe("PresetChips", () => {
+  it("選んだものと登録済みは aria-pressed、登録済みは押せない。自分で作るはリンクにできる", () => {
+    const html = renderToStaticMarkup(
+      <PresetChips
+        items={[
+          { name: "読書", selected: true },
+          { name: "早起き", selected: false },
+          { name: "筋トレ", selected: false, registered: true },
+        ]}
+        onToggle={() => {}}
+        custom={{ href: "/habits/new" }}
+      />,
+    );
+    expect(html.match(/aria-pressed="true"/g)).toHaveLength(2);
+    expect(html.match(/disabled=""/g)).toHaveLength(1);
+    expect(html).toContain("筋トレ（登録済み）");
+    expect(html).toContain('href="/habits/new"');
   });
 });
