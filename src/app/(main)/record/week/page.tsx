@@ -1,6 +1,6 @@
-import { PlaceholderPage } from "../../placeholder-page";
+import { RecordPage } from "../record-page";
 
-/** ①-b 記録：今週。仮のページ（画面はフェーズ2で作る） */
+/** ①-b 記録：今週（screens.md） */
 export default function WeekPage() {
-  return <PlaceholderPage title="Week" subtitle="今週の習慣を記録" />;
+  return <RecordPage period="weekly" />;
 }
