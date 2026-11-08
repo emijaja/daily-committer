@@ -327,4 +327,127 @@ describe("getRecordView", () => {
     expect(view.summary).toEqual({ done: 0, total: 0 });
     expect(view.grumble).toBeNull();
   });
+
+  it("行に、その期間の記録と連続記録を入れる", async () => {
+    const { me, running } = await setup();
+    const weekly = await getRecordView(me, "weekly", now);
+    const row = weekly.rows.find((r) => r.habit.id === running);
+    // 先週（10/31）の分は入れない
+    expect(row?.entries?.map((e) => [e.date, e.quantity])).toEqual([
+      ["2024-11-04", 6],
+      ["2024-11-05", 5],
+    ]);
+    // 先週は 9 km で未達成なので、今週の1週だけ
+    expect(row?.streak).toEqual({ current: 1, endedLastPeriod: false });
+  });
+});
+
+describe("getRecordView の連続記録のタグ（highlight）", () => {
+  // 2024-11-06（水）21:00 Asia/Tokyo。週は月曜始まり
+  const now = new Date("2024-11-06T12:00:00Z");
+
+  async function checkDays(me: string, habitId: string, dates: string[]) {
+    for (const date of dates) await toggleCheck(me, habitId, d(date));
+  }
+
+  it("日次：いまの連続が最も長い習慣を STREAK N で出す", async () => {
+    const me = await createUser();
+    const reading = await createHabit(me, checkHabit(), { sortOrder: 0 });
+    const early = await createHabit(me, checkHabit({ name: "早起き" }), {
+      sortOrder: 1,
+    });
+    // 読書：11/3〜11/6 の4日（今日を含む）。早起き：11/1〜11/5 の5日（今日は未でも途切れない）
+    await checkDays(me, reading, [
+      "2024-11-03",
+      "2024-11-04",
+      "2024-11-05",
+      "2024-11-06",
+    ]);
+    await checkDays(me, early, [
+      "2024-11-01",
+      "2024-11-02",
+      "2024-11-03",
+      "2024-11-04",
+      "2024-11-05",
+    ]);
+
+    const view = await getRecordView(me, "daily", now);
+    expect(view.highlight).toEqual({
+      tag: "STREAK 5",
+      label: "早起き 5日連続",
+    });
+    expect(view.rows.map((r) => r.streak?.current)).toEqual([4, 5]);
+  });
+
+  it("同じ長さなら並び順が先の習慣を出す", async () => {
+    const me = await createUser();
+    const a = await createHabit(me, checkHabit({ name: "読書" }), {
+      sortOrder: 0,
+    });
+    const b = await createHabit(me, checkHabit({ name: "早起き" }), {
+      sortOrder: 1,
+    });
+    await checkDays(me, a, ["2024-11-05", "2024-11-06"]);
+    await checkDays(me, b, ["2024-11-05", "2024-11-06"]);
+    const view = await getRecordView(me, "daily", now);
+    expect(view.highlight?.label).toBe("読書 2日連続");
+  });
+
+  it("連続が 2 未満なら null", async () => {
+    const me = await createUser();
+    const reading = await createHabit(me);
+    await checkDays(me, reading, ["2024-11-06"]);
+    const view = await getRecordView(me, "daily", now);
+    expect(view.highlight).toBeNull();
+  });
+
+  it("週次：N WEEKS と週のペース", async () => {
+    const me = await createUser();
+    const running = await createHabit(me, incrementHabit());
+    await addQuantity(me, running, d("2024-10-22"), 10); // 10/21 の週
+    await addQuantity(me, running, d("2024-10-29"), 12); // 10/28 の週
+    await addQuantity(me, running, d("2024-11-04"), 10); // 今週
+    const view = await getRecordView(me, "weekly", now);
+    expect(view.highlight).toEqual({
+      tag: "3 WEEKS",
+      label: "ランニング 週10kmペース",
+    });
+  });
+
+  it("月次：N MONTHS と N か月連続", async () => {
+    const me = await createUser();
+    const budget = await createHabit(
+      me,
+      checkHabit({ name: "家計簿", period: "monthly", timesPerPeriod: 1 }),
+      { createdOn: "2024-08-01" },
+    );
+    await checkDays(me, budget, ["2024-09-30", "2024-10-15"]);
+    // 今月はまだでも途切れない
+    const view = await getRecordView(me, "monthly", now);
+    expect(view.highlight).toEqual({
+      tag: "2 MONTHS",
+      label: "家計簿 2か月連続",
+    });
+  });
+
+  it("前の期間で途切れたら endedLastPeriod が true", async () => {
+    const me = await createUser();
+    const early = await createHabit(me, checkHabit({ name: "早起き" }));
+    // 11/3・11/4 は記録、11/5（昨日）で途切れた
+    await checkDays(me, early, ["2024-11-03", "2024-11-04"]);
+    const view = await getRecordView(me, "daily", now);
+    expect(view.rows[0]?.streak).toEqual({ current: 0, endedLastPeriod: true });
+    expect(view.highlight).toBeNull();
+  });
+
+  it("それより前に途切れていたら endedLastPeriod は false", async () => {
+    const me = await createUser();
+    const early = await createHabit(me, checkHabit({ name: "早起き" }));
+    await checkDays(me, early, ["2024-11-02", "2024-11-03"]);
+    const view = await getRecordView(me, "daily", now);
+    expect(view.rows[0]?.streak).toEqual({
+      current: 0,
+      endedLastPeriod: false,
+    });
+  });
 });
