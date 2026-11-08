@@ -1,6 +1,4 @@
 import type { ReactNode } from "react";
-import { cx, HIT_AREA } from "./cx";
-import { Icon } from "./icons";
 
 export interface SummaryCardProps {
   /** 上の小見出し（例：今日の記録　11月1日（金）） */
@@ -13,10 +11,8 @@ export interface SummaryCardProps {
   suffix?: string;
   /** 数字の下のタグ（Tag を並べる） */
   tags?: ReactNode;
-  /** 一番下のひとこと（例：あと1つで、今日はコンプリート！） */
+  /** 一番下のひとこと（例：あと1つで、今日はコンプリート！）。押せない文だけ（B13） */
   message?: ReactNode;
-  /** 指定するとひとことを押せる（右に ＞） */
-  onMessagePress?: () => void;
   className?: string;
 }
 
@@ -28,7 +24,6 @@ export function SummaryCard({
   suffix = "完了",
   tags,
   message,
-  onMessagePress,
   className,
 }: SummaryCardProps) {
   return (
@@ -46,21 +41,7 @@ export function SummaryCard({
       </p>
       {tags ? <div className="mt-1 flex flex-wrap gap-1.5">{tags}</div> : null}
       {message ? (
-        onMessagePress ? (
-          <button
-            type="button"
-            onClick={onMessagePress}
-            className={cx(
-              "mt-1 flex w-full items-center justify-between py-0.5 text-left text-[12px] font-medium",
-              HIT_AREA,
-            )}
-          >
-            <span>{message}</span>
-            <Icon name="chevron-right" size={14} />
-          </button>
-        ) : (
-          <p className="mt-1 py-0.5 text-[12px] font-medium">{message}</p>
-        )
+        <p className="mt-1 py-0.5 text-[12px] font-medium">{message}</p>
       ) : null}
     </section>
   );
