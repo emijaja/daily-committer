@@ -108,7 +108,7 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
     const habitId = row.habit.id;
     mutate(
       { type: "toggle", habitId, date: view.today },
-      () => toggleCheckAction({ habitId }),
+      () => toggleCheckAction({ habitId, date: view.today }),
       (data) => {
         if (!withToast) return;
         showToast(
@@ -140,7 +140,7 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
     }
     mutate(
       null,
-      () => repeatLastQuantityAction({ habitId: habit.id }),
+      () => repeatLastQuantityAction({ habitId: habit.id, date: view.today }),
       ({ entryId, quantity }) =>
         showToast(
           `${habit.name} ${formatQuantity(quantity)} ${habit.unit ?? ""}を記録しました`,
@@ -156,7 +156,7 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
   function setTotal(row: RecordRow, quantity: number) {
     const habitId = row.habit.id;
     mutate({ type: "setTotal", habitId, date: view.today, quantity }, () =>
-      setQuantityTotalAction({ habitId, quantity }),
+      setQuantityTotalAction({ habitId, date: view.today, quantity }),
     );
   }
 
@@ -166,7 +166,8 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
     setSheetHabitId(null);
     mutate(
       { type: "add", habitId: habit.id, date: view.today, quantity },
-      () => addQuantityAction({ habitId: habit.id, quantity }),
+      () =>
+        addQuantityAction({ habitId: habit.id, date: view.today, quantity }),
       ({ entryId }) =>
         showToast(
           `${habit.name} ${formatQuantity(quantity)} ${habit.unit ?? ""}を記録しました`,
