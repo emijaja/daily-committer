@@ -98,6 +98,29 @@ describe("createHabitsFromPresets（オンボーディング）", () => {
     const me = await createUser();
     expect(await habits.createHabitsFromPresets(me, [], now)).toEqual([]);
   });
+
+  it("同じ名前の現在の習慣があれば登録しない。過去の習慣と同じ名前は登録する", async () => {
+    const me = await createUser();
+    await habits.createHabit(me, input({ name: "読書" }), now);
+    const archived = await habits.createHabit(me, input({ name: "日記" }), now);
+    await habits.archiveHabit(me, archived.id, now);
+
+    const created = await habits.createHabitsFromPresets(
+      me,
+      ["読書", "日記", "瞑想"],
+      now,
+    );
+    expect(created.map((h) => h.name)).toEqual(["日記", "瞑想"]);
+    expect(
+      await habits.createHabitsFromPresets(me, ["読書", "瞑想"], now),
+    ).toEqual([]);
+    const list = await habits.getHabitList(me, "active");
+    expect(list.groups[0]?.habits.map((h) => h.name)).toEqual([
+      "読書",
+      "日記",
+      "瞑想",
+    ]);
+  });
 });
 
 describe("getHabit / getHabitList", () => {

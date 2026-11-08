@@ -70,7 +70,12 @@ export async function createHabit(
   });
 }
 
-/** O5：おすすめから選んだ習慣を「毎日・チェックのみ」でまとめて登録する */
+/**
+ * O5・おすすめから選ぶ：選んだ習慣を「毎日・チェックのみ」でまとめて登録する。
+ * 同じ名前の「現在の習慣」がすでにあるものは登録しない（二度押し・戻る操作での重複を防ぐ）。
+ * 過去の習慣に同じ名前があっても、新しい習慣として登録する。
+ * 戻り値は実際に登録した習慣だけ。
+ */
 export async function createHabitsFromPresets(
   userId: UserId,
   names: readonly string[],
@@ -84,11 +89,15 @@ export async function createHabitsFromPresets(
   if (unique.length === 0) return [];
   const createdOn = await getToday(userId, now);
   return db.transaction(async (tx) => {
+    const active = await habitsRepo.listHabits(tx, userId, "active");
+    const existing = new Set(active.map((h) => h.name));
+    const fresh = unique.filter((name) => !existing.has(name));
+    if (fresh.length === 0) return [];
     const start = await habitsRepo.nextSortOrder(tx, userId);
     const created = await habitsRepo.insertHabits(
       tx,
       userId,
-      unique.map((name, index) => ({
+      fresh.map((name, index) => ({
         name,
         note: null,
         period: "daily" as const,
