@@ -115,6 +115,18 @@ describe("currentStreak：過去の習慣", () => {
     const entries = everyDay(habit.id, "2024-11-01", "2024-11-10");
     expect(longestStreak(input(habit, entries, "2024-11-10"))).toBe(3);
   });
+
+  it("過去にした日がずっと前でも、過去にする前の最長連続を返す", () => {
+    const habit = makeHabit({
+      createdOn: d("2024-10-01"),
+      archivedOn: d("2024-10-11"),
+    });
+    const entries = [
+      ...everyDay(habit.id, "2024-10-01", "2024-10-10"),
+      ...everyDay(habit.id, "2026-01-01", "2026-03-31"),
+    ];
+    expect(longestStreak(input(habit, entries, "2026-03-31"))).toBe(10);
+  });
 });
 
 describe("currentStreak：週次・月次", () => {

@@ -139,6 +139,19 @@ describe("habitGrass", () => {
       ],
     );
   });
+
+  it("範囲外の記録は無視する", () => {
+    const entries = [
+      makeEntry("a", "2024-10-31"),
+      makeEntry("a", "2024-11-04"),
+    ];
+    expect(habitGrass("a", entries, range("2024-11-01", "2024-11-02"))).toEqual(
+      [
+        { date: "2024-11-01", level: 0 },
+        { date: "2024-11-02", level: 0 },
+      ],
+    );
+  });
 });
 
 describe("countRecords", () => {

@@ -79,13 +79,18 @@ export function longestStreak(input: StreakInput): number {
   if (today < habit.createdOn) return 0;
   const judge = makeJudge(input, isAchieved);
 
+  // 過去の習慣にした日を含む期間より後はすべて未達成なので、そこで打ち切る
+  const last =
+    habit.archivedOn !== null && habit.archivedOn < today
+      ? habit.archivedOn
+      : today;
   let longest = 0;
   let run = 0;
   let range = periodRange(habit.period, habit.createdOn, weekStart);
   for (;;) {
     run = judge(range) ? run + 1 : 0;
     longest = Math.max(longest, run);
-    if (range.end >= today) break;
+    if (range.end >= last) break;
     range = nextPeriodRange(habit.period, range, weekStart);
   }
   return longest;

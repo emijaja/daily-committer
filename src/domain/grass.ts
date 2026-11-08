@@ -64,7 +64,9 @@ export function habitGrass(
 ): GrassCell[] {
   const recorded = new Set(
     entries
-      .filter((entry) => entry.habitId === habitId)
+      .filter(
+        (entry) => entry.habitId === habitId && isInRange(entry.date, range),
+      )
       .map((entry) => entry.date),
   );
   return datesInRange(range).map((date) => ({
