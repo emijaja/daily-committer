@@ -8,6 +8,7 @@ import type { Grumble } from "@/domain/grumble";
 import type { ReviewItem } from "@/domain/review";
 import type {
   DateRange,
+  Entry,
   Habit,
   InputMode,
   LogicalDate,
@@ -28,6 +29,17 @@ export type ActionResult<T = void> =
 export interface RecordRow {
   habit: Habit;
   progress: PeriodProgress;
+  /**
+   * その期間（progress.range）の、この習慣の記録（日付の古い順）。
+   * ① の楽観的更新での再計算と、⑧-b の記録の一覧に使う。getRecordView は必ず入れる
+   */
+  entries?: Entry[];
+  /**
+   * 連続記録（domain/streak.ts の currentStreak。周期の数）。
+   * endedLastPeriod は「いまの連続が 0 で、前の期間（昨日・先週・先月）の前まで続いていた」
+   * （①-a の「昨日で途切れました」）。getRecordView は必ず入れる
+   */
+  streak?: { current: number; endedLastPeriod: boolean };
 }
 
 export interface RecordView {

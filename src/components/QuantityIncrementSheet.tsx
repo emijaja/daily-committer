@@ -35,6 +35,8 @@ export interface QuantityIncrementSheetProps {
   items: readonly QuantityLogItem[];
   /** 一覧の行を押したとき（その日の記録を直す） */
   onItemPress?: (id: string) => void;
+  /** 指定すると一覧の各行の右に「削除」を出す */
+  onItemDelete?: (id: string) => void;
   /** 入力欄の見出し（例：今日（金 11/1）の分を追加） */
   addLabel: ReactNode;
   /** 小数点以下の桁数（0 なら整数だけ）。既定 2 */
@@ -56,6 +58,7 @@ export function QuantityIncrementSheet({
   total,
   items,
   onItemPress,
+  onItemDelete,
   addLabel,
   decimals = 2,
   onAdd,
@@ -70,7 +73,7 @@ export function QuantityIncrementSheet({
   const amount = parseQuantity(text);
 
   const subtitle = [
-    habitName,
+    habitName !== title ? habitName : null,
     periodLabel,
     target !== null ? `目標 ${formatQuantity(target)} ${unit}` : null,
   ]
@@ -108,12 +111,15 @@ export function QuantityIncrementSheet({
         {items.length > 0 ? (
           <ul className="mt-2">
             {items.map((item) => (
-              <li key={item.id} className="border-t border-gray-300">
+              <li
+                key={item.id}
+                className="flex items-center border-t border-gray-300"
+              >
                 <button
                   type="button"
                   onClick={() => onItemPress?.(item.id)}
                   disabled={!onItemPress}
-                  className="flex min-h-11 w-full items-center justify-between text-[11px] font-bold disabled:cursor-default"
+                  className="flex min-h-11 min-w-0 flex-1 items-center justify-between text-[11px] font-bold disabled:cursor-default"
                 >
                   <span>{item.dateLabel}</span>
                   <span className="flex items-center gap-1.5">
@@ -123,6 +129,16 @@ export function QuantityIncrementSheet({
                     ) : null}
                   </span>
                 </button>
+                {onItemDelete ? (
+                  <button
+                    type="button"
+                    aria-label={`${item.dateLabel} の ${formatQuantity(item.quantity)} ${unit}を削除`}
+                    onClick={() => onItemDelete(item.id)}
+                    className="-mr-2 ml-2 min-h-11 shrink-0 px-2 text-[11px] font-bold underline underline-offset-2"
+                  >
+                    削除
+                  </button>
+                ) : null}
               </li>
             ))}
           </ul>

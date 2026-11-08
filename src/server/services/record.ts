@@ -8,9 +8,22 @@
 import "server-only";
 import { db } from "@/db/client";
 import { evaluatePeriod, summarize } from "@/domain/achievement";
-import { periodRange, toLogicalDate } from "@/domain/date";
+import {
+  isInRange,
+  periodRange,
+  previousPeriodRange,
+  toLogicalDate,
+} from "@/domain/date";
 import { selectGrumble } from "@/domain/grumble";
-import type { DateRange, Entry, LogicalDate, Period } from "@/domain/types";
+import { currentStreak } from "@/domain/streak";
+import type {
+  DateRange,
+  Entry,
+  Habit,
+  LogicalDate,
+  Period,
+  WeekStart,
+} from "@/domain/types";
 import * as entriesRepo from "@/server/repositories/entries";
 import * as habitsRepo from "@/server/repositories/habits";
 import { toHabit, type HabitRecord } from "@/server/repositories/habits";
@@ -37,14 +50,10 @@ export async function getRecordView(
   const habits = (await habitsRepo.listHabits(db, userId, "active")).map(
     toHabit,
   );
-  // 今週と今月の両方を含む期間の記録をまとめて取得する
-  const span: DateRange = {
-    start: minDate(PERIODS.map((p) => ranges[p].start)),
-    end: maxDate(PERIODS.map((p) => ranges[p].end)),
-  };
+  // 連続記録の計算に過去の記録も要るので、現在の習慣の記録をすべて取得する
+  // （習慣10個×数年でも数万行。architecture.md 4章「読み込みの量」）
   const entries = await entriesRepo.listEntries(db, userId, {
     habitIds: habits.map((h) => h.id),
-    range: span,
   });
   const byHabit = groupByHabit(entries);
 
@@ -53,14 +62,15 @@ export async function getRecordView(
       p,
       habits
         .filter((habit) => habit.period === p)
-        .map((habit): RecordRow => ({
-          habit,
-          progress: evaluatePeriod(
+        .map((habit): RecordRow => {
+          const all = byHabit.get(habit.id) ?? [];
+          return {
             habit,
-            byHabit.get(habit.id) ?? [],
-            ranges[p],
-          ),
-        })),
+            progress: evaluatePeriod(habit, all, ranges[p]),
+            entries: all.filter((e) => isInRange(e.date, ranges[p])),
+            streak: streakOf(habit, all, today, settings.weekStart),
+          };
+        }),
     ]),
   ) as Record<Period, RecordRow[]>;
   const tabSummaries = Object.fromEntries(
@@ -89,9 +99,79 @@ export async function getRecordView(
     summary: tabSummaries[period],
     tabSummaries,
     grumble,
-    // 連続記録のタグは streak の実装後に振り返りの service（C4）と合わせて結合する
-    highlight: null,
+    highlight: highlightOf(rows),
   };
+}
+
+/** 行の連続記録。endedLastPeriod は「前の期間の時点で数えたら続いていた」 */
+function streakOf(
+  habit: Habit,
+  entries: readonly Entry[],
+  today: LogicalDate,
+  weekStart: WeekStart,
+): NonNullable<RecordRow["streak"]> {
+  const current = currentStreak({ habit, entries, today, weekStart });
+  if (current > 0) return { current, endedLastPeriod: false };
+  // 前の期間を「進行中」として数えると、前の期間が未達成でもその前までの連続が数えられる
+  const previous = previousPeriodRange(
+    habit.period,
+    periodRange(habit.period, today, weekStart),
+    weekStart,
+  ).end;
+  const before = currentStreak({ habit, entries, today: previous, weekStart });
+  return { current, endedLastPeriod: before > 0 };
+}
+
+/** 集計カードのタグを出す連続の下限 */
+export const HIGHLIGHT_MIN_STREAK = 2;
+
+/**
+ * 集計カードのタグ（①-a「STREAK 6・読書 6日連続」など）。
+ * その期間の習慣のうち、いまの連続が最も長いもの（同じなら並び順が先）を出す。
+ * 連続が 2 未満なら null。
+ * - 日次：STREAK 6 ・ 読書 6日連続
+ * - 週次：4 WEEKS ・ ランニング 週10kmペース（チェックのみは「週3回ペース」）
+ * - 月次：8 MONTHS ・ 家計簿 8か月連続
+ */
+export function highlightOf(
+  rows: readonly RecordRow[],
+): RecordView["highlight"] {
+  let best: { habit: Habit; streak: number } | null = null;
+  for (const row of rows) {
+    const streak = row.streak?.current ?? 0;
+    if (streak >= HIGHLIGHT_MIN_STREAK && (!best || streak > best.streak)) {
+      best = { habit: row.habit, streak };
+    }
+  }
+  if (!best) return null;
+  const { habit, streak } = best;
+  switch (habit.period) {
+    case "daily":
+      return {
+        tag: `STREAK ${streak}`,
+        label: `${habit.name} ${streak}日連続`,
+      };
+    case "weekly":
+      return {
+        tag: `${streak} WEEKS`,
+        label: `${habit.name} ${weeklyPace(habit)}`,
+      };
+    case "monthly":
+      return {
+        tag: `${streak} MONTHS`,
+        label: `${habit.name} ${streak}か月連続`,
+      };
+  }
+}
+
+/** 週次の習慣の「週3回ペース」「週10kmペース」 */
+function weeklyPace(habit: Habit): string {
+  if (habit.recordType === "check")
+    return `週${habit.timesPerPeriod ?? 1}回ペース`;
+  if (habit.quantityTarget !== null) {
+    return `週${habit.quantityTarget}${habit.unit ?? ""}ペース`;
+  }
+  return "週1回以上ペース";
 }
 
 /** チェックのみの習慣の記録を付ける／外す。付けたら true */
@@ -227,8 +307,3 @@ function groupByHabit(entries: readonly Entry[]): Map<string, Entry[]> {
   }
   return map;
 }
-
-const minDate = (dates: LogicalDate[]) =>
-  dates.reduce((a, b) => (b < a ? b : a));
-const maxDate = (dates: LogicalDate[]) =>
-  dates.reduce((a, b) => (b > a ? b : a));

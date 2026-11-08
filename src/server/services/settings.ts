@@ -1,12 +1,19 @@
 import "server-only";
+import { cache } from "react";
 import { db } from "@/db/client";
 import * as settingsRepo from "@/server/repositories/settings";
 import { settingsPatchSchema } from "@/server/validation";
 import { ServiceError } from "./errors";
 import type { Settings, UserId } from "./types";
 
-/** 行がなければ既定値の行を作ってから返す */
-export async function getSettings(userId: UserId): Promise<Settings> {
+/**
+ * 行がなければ既定値の行を作ってから返す。
+ * 1回の描画の中では結果を使い回す（記録の画面で getRecordView と時計の表示の両方が読むため）。
+ * 更新は updateSettings の戻り値を使い、更新したあとに同じ描画の中でこれを読み直さないこと。
+ */
+export const getSettings = cache(async function getSettings(
+  userId: UserId,
+): Promise<Settings> {
   const found = await settingsRepo.findSettings(db, userId);
   if (found) return found;
   await settingsRepo.ensureSettings(db, userId);
@@ -14,7 +21,7 @@ export async function getSettings(userId: UserId): Promise<Settings> {
   if (!created)
     throw new Error(`user_settings を作れませんでした（${userId}）`);
   return created;
-}
+});
 
 export async function updateSettings(
   userId: UserId,

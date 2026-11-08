@@ -1,6 +1,6 @@
-import { PlaceholderPage } from "../../placeholder-page";
+import { RecordPage } from "../record-page";
 
-/** ①-c 記録：今月。仮のページ（画面はフェーズ2で作る） */
+/** ①-c 記録：今月（screens.md） */
 export default function MonthPage() {
-  return <PlaceholderPage title="Month" subtitle="今月の習慣を記録" />;
+  return <RecordPage period="monthly" />;
 }
