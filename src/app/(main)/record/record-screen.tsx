@@ -1,6 +1,12 @@
 "use client";
 
-import { useMemo, useOptimistic, useState, useTransition } from "react";
+import {
+  useCallback,
+  useMemo,
+  useOptimistic,
+  useState,
+  useTransition,
+} from "react";
 import { EmptyState } from "@/components/EmptyState";
 import { HabitList, HabitRow, type HabitRowProps } from "@/components/HabitRow";
 import { PillLink } from "@/components/Pill";
@@ -12,8 +18,10 @@ import { Tag } from "@/components/Tag";
 import { Toast } from "@/components/Toast";
 import type { Period } from "@/domain/types";
 import {
+  addQuantityAction,
   deleteEntryAction,
   repeatLastQuantityAction,
+  setQuantityTotalAction,
   toggleCheckAction,
 } from "@/server/actions/record";
 import type {
@@ -24,6 +32,7 @@ import type {
 import {
   PERIOD_HREF,
   PERIOD_LABEL,
+  quantityOn,
   rowCaption,
   speechMeta,
   summaryLabel,
@@ -37,6 +46,7 @@ import {
   recompute,
   type RecordOp,
 } from "./record-optimistic";
+import { QuantitySheet } from "./quantity-sheet";
 
 const PERIODS: readonly Period[] = ["daily", "weekly", "monthly"];
 
@@ -64,6 +74,11 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
   );
   const [, startTransition] = useTransition();
   const [toast, setToast] = useState<ToastState | null>(null);
+  /** 量の記録のシート（⑧-a/b）を開いている習慣 */
+  const [sheetHabitId, setSheetHabitId] = useState<string | null>(null);
+  const sheetRow = rows.find((r) => r.habit.id === sheetHabitId) ?? null;
+  // BottomSheet は onClose が変わるとフォーカスを当て直すので、同じ関数を渡し続ける
+  const closeSheet = useCallback(() => setSheetHabitId(null), []);
 
   const showToast = (message: string, undo?: () => void) =>
     setToast((prev) => ({ key: (prev?.key ?? 0) + 1, message, undo }));
@@ -109,9 +124,20 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
     );
   }
 
-  /** ＋の長押し：前回と同じ量ですぐに記録し、取り消しのトーストを出す */
+  /**
+   * ＋の長押し：前回と同じ量ですぐに記録し、取り消しのトーストを出す。
+   * 「合計を入力」で今日の記録がすでにあるときは、上書きせずにシートを開く
+   * （取り消しで元の合計を消してしまわないため。service の repeatLastQuantity と同じ考え）
+   */
   function repeatLast(row: RecordRow) {
     const { habit } = row;
+    if (
+      habit.inputMode === "total" &&
+      quantityOn(row.entries ?? [], view.today) > 0
+    ) {
+      setSheetHabitId(habit.id);
+      return;
+    }
     mutate(
       null,
       () => repeatLastQuantityAction({ habitId: habit.id }),
@@ -121,6 +147,60 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
           () => {
             setToast(null);
             deleteEntry(entryId);
+          },
+        ),
+    );
+  }
+
+  /** ⑧-a：今日の合計を上書きする（0 なら記録を消す） */
+  function setTotal(row: RecordRow, quantity: number) {
+    const habitId = row.habit.id;
+    mutate({ type: "setTotal", habitId, date: view.today, quantity }, () =>
+      setQuantityTotalAction({ habitId, quantity }),
+    );
+  }
+
+  /** ⑧-b：今日の分を1回追加し、取り消しのトーストを出す */
+  function addOnce(row: RecordRow, quantity: number) {
+    const { habit } = row;
+    setSheetHabitId(null);
+    mutate(
+      { type: "add", habitId: habit.id, date: view.today, quantity },
+      () => addQuantityAction({ habitId: habit.id, quantity }),
+      ({ entryId }) =>
+        showToast(
+          `${habit.name} ${formatQuantity(quantity)} ${habit.unit ?? ""}を記録しました`,
+          () => {
+            setToast(null);
+            deleteEntry(entryId);
+          },
+        ),
+    );
+  }
+
+  /** ⑧-b：記録の一覧から1件を削除する。取り消すと同じ日に同じ量を追加し直す */
+  function deleteOnce(row: RecordRow, entryId: string) {
+    const { habit } = row;
+    const entry = row.entries?.find((e) => e.id === entryId);
+    if (!entry) return;
+    const quantity = entry.quantity ?? 0;
+    mutate(
+      { type: "delete", entryId },
+      () => deleteEntryAction({ entryId }),
+      () =>
+        showToast(
+          `${habit.name} ${formatQuantity(quantity)} ${habit.unit ?? ""}の記録を削除しました`,
+          () => {
+            setToast(null);
+            mutate(
+              { type: "add", habitId: habit.id, date: entry.date, quantity },
+              () =>
+                addQuantityAction({
+                  habitId: habit.id,
+                  date: entry.date,
+                  quantity,
+                }),
+            );
           },
         ),
     );
@@ -190,9 +270,11 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
             : 1
           : undefined,
       week,
+      onPress: () => setSheetHabitId(habit.id),
       control: {
         type: "add",
         done: progress.achieved,
+        onPress: () => setSheetHabitId(habit.id),
         onLongPress: () => repeatLast(row),
       },
     };
@@ -255,6 +337,14 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
           <HabitRow key={row.habit.id} {...rowProps(row)} />
         ))}
       </HabitList>
+      <QuantitySheet
+        row={sheetRow}
+        today={view.today}
+        onClose={closeSheet}
+        onSetTotal={setTotal}
+        onAdd={addOnce}
+        onDelete={deleteOnce}
+      />
       <Toast
         key={toast?.key}
         open={toast !== null}

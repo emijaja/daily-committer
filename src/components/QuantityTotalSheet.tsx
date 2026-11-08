@@ -12,9 +12,9 @@ import { formatQuantity, parseQuantity } from "./quantity";
 export interface QuantityTotalSheetProps {
   open: boolean;
   onClose: () => void;
-  /** 英字の見出し（例 Workout） */
+  /** 大見出し。アプリでは習慣の名前をそのまま出す（screens.md ⑧-a。例 筋トレ） */
   title: string;
-  /** 習慣の名前（例 筋トレ） */
+  /** 習慣の名前（例 筋トレ）。title と同じなら小見出しには出さない */
   habitName: string;
   /** 日付の表示（例 11月1日（金）） */
   dateLabel: string;
@@ -56,7 +56,7 @@ export function QuantityTotalSheet({
   const set = (n: number) => setText(formatQuantity(Math.max(0, n)));
 
   const subtitle = [
-    habitName,
+    habitName !== title ? habitName : null,
     dateLabel,
     target !== null ? `目標 ${formatQuantity(target)} ${unit}` : null,
   ]
