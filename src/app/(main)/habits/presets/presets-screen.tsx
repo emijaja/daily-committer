@@ -65,7 +65,7 @@ export function PresetsScreen({ registered }: { registered: string[] }) {
         <MascotSpeech expression="normal" className="pr-6">
           {allRegistered
             ? "おすすめは、ぜんぶ登録済み。\nぼくより働き者だね。"
-            : "気になるものだけで\nいいよ。ぼくは見てるだけ。"}
+            : "気になるものだけで\nいいよ。\nぼくは見てるだけ。"}
         </MascotSpeech>
         <p className="mt-4 text-[11px] leading-[17px]" aria-live="polite">
           <Marker className="px-1.5">
