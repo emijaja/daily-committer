@@ -11,10 +11,13 @@ import {
 import {
   addQuantity,
   deleteEntry,
+  getRecordView,
   repeatLastQuantity,
   setQuantityTotal,
   toggleCheck,
 } from "./record";
+import { archiveHabit } from "./habits";
+import { updateSettings } from "./settings";
 
 const day = d("2024-11-01");
 
@@ -240,5 +243,88 @@ describe("repeatLastQuantity（＋の長押し）", () => {
     );
     await expect(repeatLastQuantity(me, check, day)).rejects.toThrow();
     expect(await entriesOf(theirs)).toHaveLength(1);
+  });
+});
+
+describe("getRecordView", () => {
+  // 2024-11-06（水）21:00 Asia/Tokyo。週は月曜始まり（11/4〜11/10）
+  const now = new Date("2024-11-06T12:00:00Z");
+
+  async function setup() {
+    const me = await createUser();
+    const reading = await createHabit(me, checkHabit(), { sortOrder: 0 });
+    const workout = await createHabit(me, totalHabit(), { sortOrder: 1 });
+    const running = await createHabit(me, incrementHabit(), { sortOrder: 2 });
+    const monthly = await createHabit(
+      me,
+      checkHabit({ name: "部屋の掃除", period: "monthly", timesPerPeriod: 2 }),
+      { sortOrder: 3 },
+    );
+    await toggleCheck(me, reading, d("2024-11-06"));
+    await setQuantityTotal(me, workout, d("2024-11-06"), 20);
+    await addQuantity(me, running, d("2024-10-31"), 9); // 先週の分は数えない
+    await addQuantity(me, running, d("2024-11-04"), 6);
+    await addQuantity(me, running, d("2024-11-05"), 5);
+    await toggleCheck(me, monthly, d("2024-11-02"));
+    return { me, reading, workout, running, monthly };
+  }
+
+  it("今日・今週・今月の行と集計を、domain の計算で返す", async () => {
+    const { me, reading, workout, running } = await setup();
+
+    const daily = await getRecordView(me, "daily", now);
+    expect(daily.today).toBe("2024-11-06");
+    expect(daily.range).toEqual({ start: "2024-11-06", end: "2024-11-06" });
+    expect(daily.rows.map((r) => [r.habit.id, r.progress.achieved])).toEqual([
+      [reading, true],
+      [workout, false],
+    ]);
+    expect(daily.rows[1]?.progress).toMatchObject({ current: 20, target: 30 });
+    expect(daily.tabSummaries).toEqual({
+      daily: { done: 1, total: 2 },
+      weekly: { done: 1, total: 1 },
+      monthly: { done: 0, total: 1 },
+    });
+    expect(daily.summary).toEqual({ done: 1, total: 2 });
+    expect(daily.grumble?.expression).toBe("grumpy");
+
+    const weekly = await getRecordView(me, "weekly", now);
+    expect(weekly.range).toEqual({ start: "2024-11-04", end: "2024-11-10" });
+    expect(weekly.rows[0]?.habit.id).toBe(running);
+    expect(weekly.rows[0]?.progress).toMatchObject({
+      current: 11,
+      achieved: true,
+    });
+  });
+
+  it("1日の切り替え時刻より前は、前の日として扱う", async () => {
+    const { me } = await setup();
+    // 11/7 3:30（Asia/Tokyo）は、切り替え 4:00 より前なので 11/6
+    const view = await getRecordView(
+      me,
+      "daily",
+      new Date("2024-11-06T18:30:00Z"),
+    );
+    expect(view.today).toBe("2024-11-06");
+  });
+
+  it("過去の習慣と他人の習慣は含めず、ぼやきを切っていれば null", async () => {
+    const { me, workout } = await setup();
+    await archiveHabit(me, workout, now);
+    const other = await createUser();
+    await createHabit(other);
+    await updateSettings(me, { grumbleEnabled: false });
+
+    const view = await getRecordView(me, "daily", now);
+    expect(view.rows).toHaveLength(1);
+    expect(view.grumble).toBeNull();
+  });
+
+  it("習慣がない期間は行が空で、ぼやきは null", async () => {
+    const me = await createUser();
+    const view = await getRecordView(me, "weekly", now);
+    expect(view.rows).toEqual([]);
+    expect(view.summary).toEqual({ done: 0, total: 0 });
+    expect(view.grumble).toBeNull();
   });
 });

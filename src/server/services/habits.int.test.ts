@@ -1,5 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
-import { fakeToLogicalDate } from "@/server/testing/fake-date";
+import { describe, expect, it } from "vitest";
 import {
   checkHabit,
   createHabit as insertHabit,
@@ -10,12 +9,6 @@ import {
   totalHabit,
 } from "@/server/testing/factories";
 import type { HabitInput } from "./types";
-
-// domain の日付の計算が実装されるまで差し替える
-vi.mock("@/domain/date", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/domain/date")>()),
-  toLogicalDate: fakeToLogicalDate,
-}));
 
 const habits = await import("./habits");
 const record = await import("./record");
