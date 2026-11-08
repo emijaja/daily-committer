@@ -1,6 +1,11 @@
 "use client";
 
-import { useId, type InputHTMLAttributes, type ReactNode } from "react";
+import {
+  useId,
+  useState,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from "react";
 import type { InputMode, Period, RecordType } from "@/domain/types";
 import { cx } from "./cx";
 import { Icon } from "./icons";
@@ -249,10 +254,17 @@ export interface NumberStepperProps {
   unit?: string;
   /** 読み上げ用のラベル（例：1週間の回数） */
   label: string;
+  /**
+   * 数字をタップして直接入力できるようにする（⑧-a の「タップで直接入力」と同じ考え方）。
+   * 既定 false（数字は表示だけ）
+   */
+  editable?: boolean;
+  /** 小数点以下の桁数の上限（直接入力と ± の丸め）。既定 2 */
+  decimals?: number;
   className?: string;
 }
 
-/** 数値の±：−（白・黒枠）・数字・＋（黒塗り）・単位 */
+/** 数値の±：−（白・黒枠）・数字・＋（黒塗り）・単位。editable なら数字を直接入力できる */
 export function NumberStepper({
   value,
   onChange,
@@ -261,10 +273,24 @@ export function NumberStepper({
   step = 1,
   unit,
   label,
+  editable = false,
+  decimals: decimalsProp = 2,
   className,
 }: NumberStepperProps) {
+  // 0 以上の整数にそろえる（NaN や負数で丸めと入力の正規表現が壊れないように）
+  const decimals = Number.isFinite(decimalsProp)
+    ? Math.max(0, Math.trunc(decimalsProp))
+    : 0;
+  const scale = 10 ** decimals;
   const clamp = (n: number) =>
-    Math.min(max, Math.max(min, Math.round(n * 100) / 100));
+    Math.min(max, Math.max(min, Math.round(n * scale) / scale));
+  // 入力中の文字列（入力中でなければ null で、value をそのまま出す）
+  const [draft, setDraft] = useState<string | null>(null);
+  const pattern = new RegExp(
+    decimals > 0 ? `^\\d*\\.?\\d{0,${decimals}}$` : "^\\d*$",
+  );
+  const numberClass =
+    "font-latin min-w-12 text-center text-[22px] font-extrabold";
   return (
     <div
       role="group"
@@ -280,12 +306,42 @@ export function NumberStepper({
       >
         <Icon name="minus" size={16} />
       </button>
-      <output
-        aria-live="polite"
-        className="font-latin min-w-12 text-center text-[22px] font-extrabold"
-      >
-        {value}
-      </output>
+      {editable ? (
+        <input
+          inputMode={decimals > 0 ? "decimal" : "numeric"}
+          aria-label={unit ? `${label}（${unit}）` : label}
+          value={draft ?? String(value)}
+          // field-sizing に未対応のブラウザでも、文字数に合わせた幅にする
+          size={Math.max((draft ?? String(value)).length, 1)}
+          onFocus={(e) => {
+            setDraft(String(value));
+            e.currentTarget.select();
+          }}
+          onChange={(e) => {
+            const v = e.target.value.replace(/[^0-9.]/g, "");
+            if (!pattern.test(v)) return;
+            setDraft(v);
+            // 保存の前に入力欄から離れなくても値が届くように、読める数になったらすぐ渡す
+            const n = Number(v);
+            if (v !== "" && v !== "." && Number.isFinite(n)) onChange(clamp(n));
+          }}
+          onBlur={() => setDraft(null)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              e.currentTarget.blur();
+            }
+          }}
+          className={cx(
+            numberClass,
+            "field-sizing-content max-w-32 bg-transparent underline decoration-gray-300 decoration-dotted underline-offset-4 outline-none focus:decoration-black focus:decoration-solid",
+          )}
+        />
+      ) : (
+        <output aria-live="polite" className={numberClass}>
+          {value}
+        </output>
+      )}
       <button
         type="button"
         aria-label={`${step} 増やす`}
@@ -325,6 +381,9 @@ const TIMES_LABEL: Record<Exclude<Period, "daily">, string> = {
   weekly: "1週間に",
   monthly: "1か月に",
 };
+
+/** 量の目標の入力の上限（DB は numeric(12,3)。歩数の月の目標などが入るよう大きめに） */
+const QUANTITY_TARGET_MAX = 999_999;
 
 const TARGET_LABEL: Record<Period, string> = {
   daily: "1日の目標",
@@ -414,7 +473,10 @@ export function GoalBlock({
               value={quantityTarget}
               onChange={onQuantityTargetChange}
               min={0}
+              max={QUANTITY_TARGET_MAX}
               unit={unit}
+              editable
+              decimals={3}
             />
           </div>
           <button

@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { AddButton, CheckBox } from "./CheckBox";
-import { SegmentedControl, Toggle } from "./forms";
+import { NumberStepper, SegmentedControl, Toggle } from "./forms";
 import { ProgressBar } from "./ProgressBar";
 import { WeekDots } from "./WeekDots";
 
@@ -21,6 +21,45 @@ describe("フォーム部品", () => {
     expect(html).toContain('role="radiogroup"');
     expect(html.match(/aria-checked="true"/g)).toHaveLength(1);
     expect(html.match(/role="radio"/g)).toHaveLength(2);
+  });
+
+  it("NumberStepper は既定では数字を表示だけ、editable なら直接入力の欄にする", () => {
+    const plain = renderToStaticMarkup(
+      <NumberStepper label="回数" value={3} onChange={() => {}} unit="回" />,
+    );
+    expect(plain).toContain("<output");
+    expect(plain).not.toContain("<input");
+
+    const editable = renderToStaticMarkup(
+      <NumberStepper
+        label="1週間の目標"
+        value={2.5}
+        onChange={() => {}}
+        unit="km"
+        editable
+        decimals={3}
+      />,
+    );
+    expect(editable).toContain('inputMode="decimal"');
+    expect(editable).toContain('value="2.5"');
+    expect(editable).toContain('aria-label="1週間の目標（km）"');
+  });
+
+  it("NumberStepper の decimals が NaN・負数なら小数なし、小数なら切り捨てて扱う", () => {
+    const render = (decimals: number) =>
+      renderToStaticMarkup(
+        <NumberStepper
+          label="回数"
+          value={3}
+          onChange={() => {}}
+          editable
+          decimals={decimals}
+        />,
+      );
+    expect(render(Number.NaN)).toContain('inputMode="numeric"');
+    expect(render(-1)).toContain('inputMode="numeric"');
+    expect(render(0.5)).toContain('inputMode="numeric"');
+    expect(render(1.9)).toContain('inputMode="decimal"');
   });
 
   it("Toggle は role=switch と aria-checked を持つ", () => {

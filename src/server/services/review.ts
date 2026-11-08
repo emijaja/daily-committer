@@ -5,13 +5,25 @@
  */
 import "server-only";
 import { db } from "@/db/client";
-import { addDays, isInRange, periodRange, yearRange } from "@/domain/date";
 import { evaluatePeriod } from "@/domain/achievement";
-import { notImplemented } from "@/domain/not-implemented";
+import {
+  addDays,
+  isInRange,
+  periodRange,
+  splitDate,
+  yearRange,
+} from "@/domain/date";
 import { allHabitsGrass, countRecords, habitGrass } from "@/domain/grass";
 import { isActiveOn } from "@/domain/habit";
+import {
+  buildHabitStats,
+  habitDetailGrassRange,
+  selectHabitDetailGrumble,
+  STREAK_UNIT,
+} from "@/domain/habit-detail";
 import { buildAchievements, buildAlmostThere } from "@/domain/review";
 import { selectReviewGrumble } from "@/domain/review-grumble";
+import { currentStreak, isPersonalBest, longestStreak } from "@/domain/streak";
 import type {
   DateRange,
   Entry,
@@ -40,24 +52,27 @@ export interface ReviewSource {
   today: LogicalDate;
   /** 過去の習慣も含むすべての習慣（並び順） */
   habits: Habit[];
-  /** span の範囲の記録（日付の古い順） */
+  /** span の範囲の記録（日付の古い順）。habitIds を渡したときはその習慣の分だけ */
   entries: Entry[];
 }
 
 /**
  * 設定・今日・すべての習慣を取得し、span が返す範囲の記録をまとめて1回で取得する。
  * span は習慣と今日から、必要な記録の範囲を決める（③でも使う）。
+ * habitIds を渡すと、記録はその習慣の分だけを取得する（③は1つの習慣しか使わないため）。
  */
 export async function loadReviewSource(
   userId: UserId,
   now: Date,
   span: (habits: readonly Habit[], today: LogicalDate) => DateRange,
+  options: { habitIds?: readonly string[] } = {},
 ): Promise<ReviewSource> {
   const settings = await getSettings(userId);
   const today = todayFor(settings, now);
   const habits = (await habitsRepo.listHabits(db, userId, "all")).map(toHabit);
   const entries = await entriesRepo.listEntries(db, userId, {
     range: span(habits, today),
+    habitIds: options.habitIds,
   });
   return { settings, today, habits, entries };
 }
@@ -249,13 +264,61 @@ function dayEditCalendarRange(
   return { start: periodRange("monthly", from, "mon").start, end: today };
 }
 
-/** ③ 習慣の詳細 */
+/**
+ * ③ 習慣の詳細。過去の習慣も表示できる。他人の習慣・存在しない ID は null。
+ * - いまの連続・最長連続・自己ベストは作った日からのすべての記録で数える（domain/streak.ts）
+ * - 草は直近1年の2値（domain/habit-detail.ts の範囲）
+ */
 export async function getHabitDetail(
   userId: UserId,
   habitId: string,
   now: Date = new Date(),
 ): Promise<HabitDetailView | null> {
-  return notImplemented(
-    `getHabitDetail(${userId}, ${habitId}, ${now.toISOString()})`,
+  const { settings, today, habits, entries } = await loadReviewSource(
+    userId,
+    now,
+    (all, today) => {
+      const habit = all.find((h) => h.id === habitId);
+      if (!habit) return { start: today, end: today };
+      const grassRange = habitDetailGrassRange(habit, today);
+      return {
+        start: minDate(
+          minDate(habit.createdOn, grassRange.start),
+          yearRange(splitDate(today)[0]).start,
+        ),
+        end: today,
+      };
+    },
+    { habitIds: [habitId] },
   );
+  const habit = habits.find((h) => h.id === habitId);
+  if (!habit) return null;
+
+  const input = { habit, entries, today, weekStart: settings.weekStart };
+  const current = currentStreak(input);
+  const longest = longestStreak(input);
+  const personalBest = isPersonalBest(input);
+  const grassRange = habitDetailGrassRange(habit, today);
+  const grass = habitGrass(habit.id, entries, grassRange);
+
+  return {
+    habit,
+    today,
+    weekStart: settings.weekStart,
+    streakUnit: STREAK_UNIT[habit.period],
+    currentStreak: current,
+    longestStreak: longest,
+    isPersonalBest: personalBest,
+    grass,
+    stats: buildHabitStats(input, longest),
+    grumble: settings.grumbleEnabled
+      ? selectHabitDetailGrumble({
+          habit,
+          currentStreak: current,
+          isPersonalBest: personalBest,
+          hasRecords: grass.some((c) => c.level > 0),
+          today,
+        })
+      : null,
+  };
 }
