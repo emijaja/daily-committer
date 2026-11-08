@@ -441,7 +441,7 @@ export function DayEditScreen({ view }: { view: DayEditView }) {
       ) : null}
       {weekly.length + monthly.length > 0 ? (
         <p className="text-caption mt-4">
-          <Marker>週次は曜日を、月次は回数をタップして修正します</Marker>
+          <Marker>週次は曜日を、月次は右のボタンをタップして修正します</Marker>
         </p>
       ) : null}
 
