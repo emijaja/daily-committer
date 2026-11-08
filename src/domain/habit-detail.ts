@@ -38,7 +38,9 @@ export interface HabitStat {
 }
 
 /** 連続の単位（日次は日、週次は週、月次はか月） */
-export const STREAK_UNIT: Record<Period, string> = {
+export type StreakUnit = "日" | "週" | "か月";
+
+export const STREAK_UNIT: Record<Period, StreakUnit> = {
   daily: "日",
   weekly: "週",
   monthly: "か月",

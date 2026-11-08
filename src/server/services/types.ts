@@ -5,6 +5,7 @@
 import type { PeriodProgress, CompletionSummary } from "@/domain/achievement";
 import type { GrassCell } from "@/domain/grass";
 import type { Grumble } from "@/domain/grumble";
+import type { StreakUnit } from "@/domain/habit-detail";
 import type { ReviewItem } from "@/domain/review";
 import type {
   DateRange,
@@ -131,7 +132,7 @@ export interface HabitDetailView {
   today: LogicalDate;
   weekStart: WeekStart;
   /** 連続の単位（日次は日、週次は週、月次はか月） */
-  streakUnit: string;
+  streakUnit: StreakUnit;
   currentStreak: number;
   longestStreak: number;
   isPersonalBest: boolean;
