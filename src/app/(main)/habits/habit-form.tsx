@@ -116,9 +116,12 @@ export function HabitForm(props: HabitFormProps) {
     });
   };
 
-  const goalErrors = GOAL_FIELDS.map((f) => errors[f]).filter(
-    (m): m is string => Boolean(m),
-  );
+  // 項目が違っても同じ文言になることがあるので、重複を除いて出す（key にも文言を使うため）
+  const goalErrors = [
+    ...new Set(
+      GOAL_FIELDS.map((f) => errors[f]).filter((m): m is string => Boolean(m)),
+    ),
+  ];
 
   return (
     <main className="pb-8">
