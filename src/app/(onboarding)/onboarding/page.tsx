@@ -1,20 +1,41 @@
 import Link from "next/link";
+import { Mascot } from "@/components/Mascot";
+import { PillLink } from "@/components/Pill";
+import {
+  ONBOARDING_STEP,
+  OnboardingScreen,
+  OnboardingText,
+  PageDots,
+  SkipLink,
+  UNDERLINE_LINK,
+} from "./onboarding-ui";
 
 /**
- * オンボーディングの仮のページ。onboarded_at が NULL のユーザーは (main) からここへ移る。
- * O1〜O5 は /onboarding/[step] としてフェーズ3-1 で作る（architecture.md 2章・5章）。
+ * O1 ようこそ（Figma 2105:5304）。ログインしていなくても開ける。
+ * 「スキップ」と「ログイン」は A1 へ。ログイン済みなら A1 が行き先を決める
+ * （オンボーディングを終えていれば ①-a、まだなら O5）。
  */
-export default function OnboardingPage() {
+export default function WelcomePage() {
   return (
-    <main className="px-screen-x py-8">
-      <h1 className="font-latin text-display">Hello,</h1>
-      <p className="text-subtitle-ja">ゆるく、続ける。</p>
-      <p className="text-body mt-6 text-gray-500">
-        オンボーディングはフェーズ3で作ります。
+    <OnboardingScreen
+      topRight={<SkipLink />}
+      visual={<Mascot expression="normal" size={300} label="" />}
+    >
+      <OnboardingText title="Hello," heading="ゆるく、続ける。">
+        {
+          "Confidently は、習慣を記録して草を育てるアプリです。\nサボりたい日は、ぼくがぼやきます。"
+        }
+      </OnboardingText>
+      <PageDots current={ONBOARDING_STEP.o1} />
+      <div className="mt-4">
+        <PillLink href="/onboarding/tap">はじめる</PillLink>
+      </div>
+      <p className="mt-4 text-center text-[11px] leading-[14px] font-medium text-gray-600">
+        アカウントをお持ちの方は{" "}
+        <Link href="/login" className={UNDERLINE_LINK}>
+          ログイン
+        </Link>
       </p>
-      <Link href="/login" className="text-body mt-6 inline-block underline">
-        ログイン
-      </Link>
-    </main>
+    </OnboardingScreen>
   );
 }

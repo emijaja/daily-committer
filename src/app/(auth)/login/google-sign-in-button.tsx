@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import { authClient } from "@/lib/auth-client";
-import { safeNext } from "@/lib/safe-next";
+import { afterLogin } from "./after-login";
 
 export function GoogleSignInButton({
   searchParams,
@@ -19,7 +19,7 @@ export function GoogleSignInButton({
     try {
       const { error } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: safeNext(next),
+        callbackURL: afterLogin(next),
       });
       // 成功すると Google の画面へ移るので、ここに来るのは失敗したときだけ
       if (error) throw error;
