@@ -1,6 +1,6 @@
 # 設計（アーキテクチャ）
 
-ステータス: **承認待ち**（最終更新: 2026-11-06）
+ステータス: **承認済み**（2026-11-07）
 
 前提：[README.md](README.md)（方針・技術スタック）、[domain-spec.md](domain-spec.md)（データモデル・計算ロジック）。
 この文書は「どう作るか」を決める。承認後に [implementation-plan.md](implementation-plan.md) に沿って実装する。
