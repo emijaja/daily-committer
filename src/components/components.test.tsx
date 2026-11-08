@@ -45,6 +45,23 @@ describe("フォーム部品", () => {
     expect(editable).toContain('aria-label="1週間の目標（km）"');
   });
 
+  it("NumberStepper の decimals が NaN・負数なら小数なし、小数なら切り捨てて扱う", () => {
+    const render = (decimals: number) =>
+      renderToStaticMarkup(
+        <NumberStepper
+          label="回数"
+          value={3}
+          onChange={() => {}}
+          editable
+          decimals={decimals}
+        />,
+      );
+    expect(render(Number.NaN)).toContain('inputMode="numeric"');
+    expect(render(-1)).toContain('inputMode="numeric"');
+    expect(render(0.5)).toContain('inputMode="numeric"');
+    expect(render(1.9)).toContain('inputMode="decimal"');
+  });
+
   it("Toggle は role=switch と aria-checked を持つ", () => {
     const html = renderToStaticMarkup(
       <Toggle label="ぼやきを表示" checked onChange={() => {}} />,

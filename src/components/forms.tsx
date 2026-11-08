@@ -274,9 +274,13 @@ export function NumberStepper({
   unit,
   label,
   editable = false,
-  decimals = 2,
+  decimals: decimalsProp = 2,
   className,
 }: NumberStepperProps) {
+  // 0 以上の整数にそろえる（NaN や負数で丸めと入力の正規表現が壊れないように）
+  const decimals = Number.isFinite(decimalsProp)
+    ? Math.max(0, Math.trunc(decimalsProp))
+    : 0;
   const scale = 10 ** decimals;
   const clamp = (n: number) =>
     Math.min(max, Math.max(min, Math.round(n * scale) / scale));
