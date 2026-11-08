@@ -14,6 +14,7 @@ import type {
   Period,
   RecordType,
   Settings,
+  WeekStart,
 } from "@/domain/types";
 
 export type UserId = string;
@@ -68,6 +69,14 @@ export interface ReviewView {
   year: number;
   /** null なら「すべての習慣」、指定すると「習慣ごと」 */
   habitId: string | null;
+  /** サーバーで決めた今日（草の未来のマス・年の切り替えの上限） */
+  today: LogicalDate;
+  weekStart: WeekStart;
+  /**
+   * 「習慣ごと」で選べる習慣：その年に1日でも現在の習慣だったもの。
+   * 現在の習慣を並び順に、そのあと過去の習慣を並び順に
+   */
+  habits: Habit[];
   grass: GrassCell[];
   recordCount: number;
   achievements: ReviewItem[];

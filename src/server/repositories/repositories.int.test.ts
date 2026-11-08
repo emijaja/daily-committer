@@ -185,6 +185,27 @@ describe("entries repository と DB の制約", () => {
     expect(found.every((e) => e.habitId === habit.id)).toBe(true);
   });
 
+  it("findFirstEntryDate は自分の記録のいちばん古い日を返す（習慣で絞れる）", async () => {
+    const me = await createUser();
+    const other = await createUser();
+    const a = (await habitsRepo.findHabit(db, me, await createHabit(me)))!;
+    const b = (await habitsRepo.findHabit(db, me, await createHabit(me)))!;
+    const theirs = (await habitsRepo.findHabit(
+      db,
+      other,
+      await createHabit(other),
+    ))!;
+    expect(await entriesRepo.findFirstEntryDate(db, me)).toBeNull();
+    await entriesRepo.insertEntry(db, other, theirs, d("2024-01-01"), null);
+    await entriesRepo.insertEntry(db, me, a, d("2024-11-03"), null);
+    await entriesRepo.insertEntry(db, me, b, d("2024-10-08"), null);
+    expect(await entriesRepo.findFirstEntryDate(db, me)).toBe("2024-10-08");
+    expect(await entriesRepo.findFirstEntryDate(db, me, a.id)).toBe(
+      "2024-11-03",
+    );
+    expect(await entriesRepo.findFirstEntryDate(db, me, "x")).toBeNull();
+  });
+
   it("findLatestQuantity はいちばん新しい記録の量を返す", async () => {
     const me = await createUser();
     const habit = (await habitsRepo.findHabit(

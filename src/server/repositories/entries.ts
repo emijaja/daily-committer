@@ -243,3 +243,23 @@ export async function mergeSameDayEntries(
     where e.id = r.id and r.id <> r.keep_id
   `);
 }
+
+/** 自分の記録のうち、いちばん古い日付。記録がなければ null。habitId を指定するとその習慣だけ */
+export async function findFirstEntryDate(
+  exec: Executor,
+  userId: string,
+  habitId?: string,
+): Promise<LogicalDate | null> {
+  const conditions = [eq(entries.userId, userId)];
+  if (habitId !== undefined) {
+    if (!isUuid(habitId)) return null;
+    conditions.push(eq(entries.habitId, habitId));
+  }
+  const [row] = await exec
+    .select({ date: entries.date })
+    .from(entries)
+    .where(and(...conditions))
+    .orderBy(asc(entries.date))
+    .limit(1);
+  return (row?.date as LogicalDate | undefined) ?? null;
+}

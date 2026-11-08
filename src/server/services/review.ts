@@ -1,17 +1,162 @@
+/**
+ * 振り返り（⑥-a）・記録の確認（②）・習慣の詳細（③）のユースケース。
+ *
+ * 記録は期間の分をまとめて1回で取得し、草・連続・文章は domain で計算する（architecture.md 4章）。
+ */
+import "server-only";
+import { db } from "@/db/client";
+import { yearRange } from "@/domain/date";
 import { notImplemented } from "@/domain/not-implemented";
-import type { LogicalDate } from "@/domain/types";
+import { allHabitsGrass, countRecords, habitGrass } from "@/domain/grass";
+import { isActiveOn } from "@/domain/habit";
+import { buildAchievements, buildAlmostThere } from "@/domain/review";
+import { selectReviewGrumble } from "@/domain/review-grumble";
+import type {
+  DateRange,
+  Entry,
+  Habit,
+  LogicalDate,
+  Settings,
+} from "@/domain/types";
+import * as entriesRepo from "@/server/repositories/entries";
+import * as habitsRepo from "@/server/repositories/habits";
+import { toHabit } from "@/server/repositories/habits";
+import { todayFor } from "./clock";
+import { habitNotFound } from "./errors";
+import { getSettings } from "./settings";
 import type { DayEditView, HabitDetailView, ReviewView, UserId } from "./types";
 
-/** ⑥-a。habitId を指定すると「習慣ごと」 */
+/** 振り返り・詳細の計算に使う、まとめて取得した値 */
+export interface ReviewSource {
+  settings: Settings;
+  today: LogicalDate;
+  /** 過去の習慣も含むすべての習慣（並び順） */
+  habits: Habit[];
+  /** span の範囲の記録（日付の古い順） */
+  entries: Entry[];
+}
+
+/**
+ * 設定・今日・すべての習慣を取得し、span が返す範囲の記録をまとめて1回で取得する。
+ * span は習慣と今日から、必要な記録の範囲を決める（③でも使う）。
+ */
+export async function loadReviewSource(
+  userId: UserId,
+  now: Date,
+  span: (habits: readonly Habit[], today: LogicalDate) => DateRange,
+): Promise<ReviewSource> {
+  const settings = await getSettings(userId);
+  const today = todayFor(settings, now);
+  const habits = (await habitsRepo.listHabits(db, userId, "all")).map(toHabit);
+  const entries = await entriesRepo.listEntries(db, userId, {
+    range: span(habits, today),
+  });
+  return { settings, today, habits, entries };
+}
+
+/**
+ * 今日の時点の連続を数えるのに要る範囲の始まり：現在の習慣のうち、いちばん古い作った日。
+ * 連続は作った日より前を数えないので、これより前の記録は要らない。現在の習慣がなければ今日。
+ */
+export function streakSpanStart(
+  habits: readonly Habit[],
+  today: LogicalDate,
+): LogicalDate {
+  let start = today;
+  for (const habit of habits) {
+    if (isActiveOn(habit, today) && habit.createdOn < start) {
+      start = habit.createdOn;
+    }
+  }
+  return start;
+}
+
+/** その年に1日でも現在の習慣だったか */
+function activeInRange(habit: Habit, range: DateRange): boolean {
+  return (
+    habit.createdOn <= range.end &&
+    (habit.archivedOn === null || habit.archivedOn > range.start)
+  );
+}
+
+const minDate = (a: LogicalDate, b: LogicalDate) => (a < b ? a : b);
+const maxDate = (a: LogicalDate, b: LogicalDate) => (a > b ? a : b);
+
+/**
+ * ⑥-a。habitId を指定すると「習慣ごと」。
+ * - 草・記録の件数はその年（1/1〜12/31）の分
+ * - 「達成していること」「もう少しで達成」は今日の時点の連続なので、年によらず同じ。
+ *   「習慣ごと」ではその習慣の分だけにする
+ * 他人の習慣・存在しない habitId は not_found のエラー。
+ */
 export async function getReviewView(
   userId: UserId,
   year: number,
   habitId: string | null,
   now: Date = new Date(),
 ): Promise<ReviewView> {
-  return notImplemented(
-    `getReviewView(${userId}, ${year}, ${habitId}, ${now.toISOString()})`,
-  );
+  const range = yearRange(year);
+  const [source, firstRecordDate] = await Promise.all([
+    // その年の草と、今日の時点の連続の両方を含む範囲をまとめて取得する
+    loadReviewSource(userId, now, (habits, today) => ({
+      start: minDate(range.start, streakSpanStart(habits, today)),
+      end: maxDate(range.end, today),
+    })),
+    entriesRepo.findFirstEntryDate(db, userId),
+  ]);
+  const { settings, today, habits, entries } = source;
+
+  if (habitId !== null && !habits.some((h) => h.id === habitId)) {
+    throw habitNotFound();
+  }
+  const target =
+    habitId === null ? entries : entries.filter((e) => e.habitId === habitId);
+
+  const reviewInput = {
+    habits,
+    entries,
+    today,
+    weekStart: settings.weekStart,
+  };
+  const onlyTarget = <T extends { habitId: string }>(items: T[]) =>
+    habitId === null ? items : items.filter((i) => i.habitId === habitId);
+  const achievements = onlyTarget(buildAchievements(reviewInput));
+  const almostThere = onlyTarget(buildAlmostThere(reviewInput));
+  const recordCount = countRecords(target, range);
+
+  const selectable = habits.filter((h) => activeInRange(h, range));
+  const current = selectable.filter((h) => h.archivedOn === null);
+  const archived = selectable.filter((h) => h.archivedOn !== null);
+  // 選んでいる習慣は、その年に現在の習慣でなくても選べるように残す
+  const chosen =
+    habitId !== null && !selectable.some((h) => h.id === habitId)
+      ? habits.filter((h) => h.id === habitId)
+      : [];
+
+  return {
+    year,
+    habitId,
+    today,
+    weekStart: settings.weekStart,
+    habits: [...current, ...archived, ...chosen],
+    grass:
+      habitId === null
+        ? allHabitsGrass(habits, entries, range)
+        : habitGrass(habitId, entries, range),
+    recordCount,
+    achievements,
+    almostThere,
+    grumble: settings.grumbleEnabled
+      ? selectReviewGrumble({
+          achievements,
+          almostThere,
+          recordCount,
+          today,
+          habitNames: Object.fromEntries(habits.map((h) => [h.id, h.name])),
+        })
+      : null,
+    firstRecordDate,
+  };
 }
 
 /** ② 記録の確認・修正 */
