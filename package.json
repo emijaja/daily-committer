@@ -17,8 +17,8 @@
     "db:down": "docker compose down",
     "tokens": "node scripts/gen-tokens.mjs && prettier --write src/styles/tokens.css",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "node --env-file=.env.local ./node_modules/drizzle-kit/bin.cjs migrate",
-    "db:studio": "node --env-file=.env.local ./node_modules/drizzle-kit/bin.cjs studio"
+    "db:migrate": "node --env-file-if-exists=.env.local ./node_modules/drizzle-kit/bin.cjs migrate",
+    "db:studio": "node --env-file-if-exists=.env.local ./node_modules/drizzle-kit/bin.cjs studio"
   },
   "dependencies": {
     "better-auth": "^1.7.18",
