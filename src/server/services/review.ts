@@ -5,7 +5,8 @@
  */
 import "server-only";
 import { db } from "@/db/client";
-import { yearRange } from "@/domain/date";
+import { addDays, isInRange, periodRange, yearRange } from "@/domain/date";
+import { evaluatePeriod } from "@/domain/achievement";
 import { notImplemented } from "@/domain/not-implemented";
 import { allHabitsGrass, countRecords, habitGrass } from "@/domain/grass";
 import { isActiveOn } from "@/domain/habit";
@@ -16,15 +17,22 @@ import type {
   Entry,
   Habit,
   LogicalDate,
+  Period,
   Settings,
 } from "@/domain/types";
 import * as entriesRepo from "@/server/repositories/entries";
 import * as habitsRepo from "@/server/repositories/habits";
 import { toHabit } from "@/server/repositories/habits";
 import { todayFor } from "./clock";
-import { habitNotFound } from "./errors";
+import { habitNotFound, ServiceError } from "./errors";
 import { getSettings } from "./settings";
-import type { DayEditView, HabitDetailView, ReviewView, UserId } from "./types";
+import type {
+  DayEditView,
+  HabitDetailView,
+  RecordRow,
+  ReviewView,
+  UserId,
+} from "./types";
 
 /** 振り返り・詳細の計算に使う、まとめて取得した値 */
 export interface ReviewSource {
@@ -159,12 +167,86 @@ export async function getReviewView(
   };
 }
 
-/** ② 記録の確認・修正 */
+/**
+ * ② 記録の確認・修正。
+ * - 行はその日に「現在の習慣」だった習慣（作った日 <= date、過去にした日 > date）を、
+ *   日次はその日・週次はその日を含む週・月次はその日を含む月の進み具合で返す
+ * - beforeStart：いちばん古い作った日より前（習慣がなければ true）。行はすべて空になる
+ * - 未来の日は invalid のエラー（記録できないため）
+ */
 export async function getDayEditView(
   userId: UserId,
   date: LogicalDate,
+  now: Date = new Date(),
 ): Promise<DayEditView> {
-  return notImplemented(`getDayEditView(${userId}, ${date})`);
+  // 週の始まりは設定によるので、月の1日の6日前から読めば、どちらの週の始まりでも週の全体を含む
+  const [source, firstRecordDate] = await Promise.all([
+    loadReviewSource(userId, now, (habits, today) => {
+      const range = dayEditCalendarRange(habits, date, today);
+      return {
+        start: addDays(range.start, -6),
+        end: maxDate(today, periodRange("monthly", date, "mon").end),
+      };
+    }),
+    entriesRepo.findFirstEntryDate(db, userId),
+  ]);
+  const { settings, today, habits, entries } = source;
+  if (date > today) {
+    throw new ServiceError("invalid", "未来の日付は開けません");
+  }
+
+  const startDate = earliestCreatedOn(habits);
+  const active = habits.filter((h) => isActiveOn(h, date));
+  const byHabit = Map.groupBy(entries, (e) => e.habitId);
+  const rowsOf = (period: Period, range: DateRange): RecordRow[] =>
+    active
+      .filter((h) => h.period === period)
+      .map((habit) => {
+        const own = byHabit.get(habit.id) ?? [];
+        return {
+          habit,
+          progress: evaluatePeriod(habit, own, range),
+          entries: own.filter((e) => isInRange(e.date, range)),
+        };
+      });
+  const weekRange = periodRange("weekly", date, settings.weekStart);
+  const monthRange = periodRange("monthly", date, settings.weekStart);
+  const calendarRange = dayEditCalendarRange(habits, date, today);
+
+  return {
+    date,
+    daily: rowsOf("daily", { start: date, end: date }),
+    weekly: { range: weekRange, rows: rowsOf("weekly", weekRange) },
+    monthly: { range: monthRange, rows: rowsOf("monthly", monthRange) },
+    beforeStart: startDate === null || date < startDate,
+    today,
+    weekStart: settings.weekStart,
+    startDate,
+    firstRecordDate,
+    calendar: {
+      range: calendarRange,
+      grass: allHabitsGrass(habits, entries, calendarRange),
+    },
+  };
+}
+
+/** 過去の習慣も含め、いちばん古い作った日。習慣がなければ null */
+function earliestCreatedOn(habits: readonly Habit[]): LogicalDate | null {
+  let start: LogicalDate | null = null;
+  for (const habit of habits) {
+    if (start === null || habit.createdOn < start) start = habit.createdOn;
+  }
+  return start;
+}
+
+/** ② のカレンダーの範囲：習慣を始めた日と date のうち前のほうを含む月の1日から、今日まで */
+function dayEditCalendarRange(
+  habits: readonly Habit[],
+  date: LogicalDate,
+  today: LogicalDate,
+): DateRange {
+  const from = minDate(earliestCreatedOn(habits) ?? date, date);
+  return { start: periodRange("monthly", from, "mon").start, end: today };
 }
 
 /** ③ 習慣の詳細 */
