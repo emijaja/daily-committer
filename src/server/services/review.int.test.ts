@@ -5,11 +5,12 @@ import {
   createHabit,
   createUser,
   d,
+  incrementHabit,
   totalHabit,
 } from "@/server/testing/factories";
 import { archiveHabit } from "./habits";
-import { setQuantityTotal, toggleCheck } from "./record";
-import { getReviewView } from "./review";
+import { addQuantity, setQuantityTotal, toggleCheck } from "./record";
+import { getDayEditView, getReviewView } from "./review";
 import { updateSettings } from "./settings";
 
 // 2024-11-06（水）21:00 Asia/Tokyo
@@ -200,5 +201,188 @@ describe("getReviewView", () => {
     const me = await createUser({ weekStart: "sun" });
     const view = await getReviewView(me, 2024, null, now);
     expect(view.weekStart).toBe("sun");
+  });
+});
+
+describe("getDayEditView", () => {
+  it("その日の日次と、その日を含む週・月の習慣の行を、並び順に返す", async () => {
+    const me = await createUser();
+    const reading = await createHabit(me, checkHabit({ name: "読書" }), {
+      sortOrder: 0,
+    });
+    const workout = await createHabit(me, totalHabit({ name: "筋トレ" }), {
+      sortOrder: 1,
+    });
+    const running = await createHabit(me, incrementHabit(), { sortOrder: 2 });
+    const cleaning = await createHabit(
+      me,
+      checkHabit({ name: "掃除", period: "weekly", timesPerPeriod: 1 }),
+      { sortOrder: 3 },
+    );
+    const gym = await createHabit(
+      me,
+      checkHabit({ name: "ジム", period: "monthly", timesPerPeriod: 8 }),
+      { sortOrder: 4 },
+    );
+    await toggleCheck(me, reading, d("2024-10-29"));
+    await toggleCheck(me, reading, d("2024-10-30"));
+    await setQuantityTotal(me, workout, d("2024-10-29"), 30);
+    await addQuantity(me, running, d("2024-10-28"), 3.2);
+    await addQuantity(me, running, d("2024-10-30"), 3);
+    // 前の週の分は数えない
+    await addQuantity(me, running, d("2024-10-27"), 5);
+    await toggleCheck(me, cleaning, d("2024-10-29"));
+    await toggleCheck(me, gym, d("2024-10-02"));
+    await toggleCheck(me, gym, d("2024-10-29"));
+    await toggleCheck(me, gym, d("2024-11-01"));
+
+    const view = await getDayEditView(me, d("2024-10-29"), now);
+
+    expect(view.date).toBe("2024-10-29");
+    expect(view.today).toBe("2024-11-06");
+    expect(view.weekStart).toBe("mon");
+    expect(view.beforeStart).toBe(false);
+    expect(view.startDate).toBe("2024-10-01");
+    expect(view.firstRecordDate).toBe("2024-10-02");
+
+    expect(view.daily.map((r) => r.habit.name)).toEqual(["読書", "筋トレ"]);
+    expect(view.daily[0]?.progress.achieved).toBe(true);
+    expect(view.daily[0]?.entries?.map((e) => e.date)).toEqual(["2024-10-29"]);
+    expect(view.daily[1]?.progress.current).toBe(30);
+    expect(view.daily[1]?.streak).toBeUndefined();
+
+    expect(view.weekly.range).toEqual({
+      start: "2024-10-28",
+      end: "2024-11-03",
+    });
+    expect(view.weekly.rows.map((r) => r.habit.name)).toEqual([
+      "ランニング",
+      "掃除",
+    ]);
+    expect(view.weekly.rows[0]?.progress.current).toBeCloseTo(6.2);
+    expect(view.weekly.rows[0]?.entries).toHaveLength(2);
+    expect(view.weekly.rows[1]?.progress.achieved).toBe(true);
+
+    expect(view.monthly.range).toEqual({
+      start: "2024-10-01",
+      end: "2024-10-31",
+    });
+    expect(view.monthly.rows[0]?.progress.current).toBe(2);
+    expect(view.monthly.rows[0]?.entries?.map((e) => e.date)).toEqual([
+      "2024-10-02",
+      "2024-10-29",
+    ]);
+
+    // カレンダーの草：始めた日の月の1日から今日まで
+    expect(view.calendar.range).toEqual({
+      start: "2024-10-01",
+      end: "2024-11-06",
+    });
+    expect(view.calendar.grass).toHaveLength(37);
+    // 10/29：5習慣中4（読書・筋トレ・掃除・ジム）→ レベル3
+    expect(levelOn(view.calendar.grass, "2024-10-29")).toBe(3);
+  });
+
+  it("週の始まりの設定で週の範囲が変わり、月をまたぐ週の前の月の記録も含む", async () => {
+    const me = await createUser();
+    await updateSettings(me, { weekStart: "sun" });
+    const cleaning = await createHabit(
+      me,
+      checkHabit({ name: "掃除", period: "weekly", timesPerPeriod: 2 }),
+      { createdOn: "2024-09-01" },
+    );
+    await toggleCheck(me, cleaning, d("2024-09-29"));
+    await toggleCheck(me, cleaning, d("2024-10-03"));
+
+    const view = await getDayEditView(me, d("2024-10-01"), now);
+    expect(view.weekly.range).toEqual({
+      start: "2024-09-29",
+      end: "2024-10-05",
+    });
+    expect(view.weekly.rows[0]?.progress.recordedDates).toEqual([
+      "2024-09-29",
+      "2024-10-03",
+    ]);
+    expect(view.weekly.rows[0]?.progress.achieved).toBe(true);
+  });
+
+  it("その日に現在の習慣でなかったもの（作る前・過去にしたあと）は出さない", async () => {
+    const me = await createUser();
+    await createHabit(me, checkHabit({ name: "古い" }), {
+      createdOn: "2024-09-01",
+      sortOrder: 0,
+    });
+    await createHabit(me, checkHabit({ name: "新しい" }), {
+      createdOn: "2024-10-15",
+      sortOrder: 1,
+    });
+    const archived = await createHabit(me, checkHabit({ name: "やめた" }), {
+      createdOn: "2024-09-01",
+      sortOrder: 2,
+    });
+    // 11/6 に過去の習慣にする
+    await archiveHabit(me, archived, now);
+
+    const before = await getDayEditView(me, d("2024-10-10"), now);
+    expect(before.daily.map((r) => r.habit.name)).toEqual(["古い", "やめた"]);
+    const today = await getDayEditView(me, d("2024-11-06"), now);
+    expect(today.daily.map((r) => r.habit.name)).toEqual(["古い", "新しい"]);
+  });
+
+  it("習慣を始める前の日は beforeStart で、行は空。習慣がなければ常に beforeStart", async () => {
+    const me = await createUser();
+    const reading = await createHabit(me, checkHabit(), {
+      createdOn: "2024-10-08",
+    });
+    await toggleCheck(me, reading, d("2024-10-09"));
+
+    const view = await getDayEditView(me, d("2024-10-01"), now);
+    expect(view.beforeStart).toBe(true);
+    expect(view.daily).toEqual([]);
+    expect(view.weekly.rows).toEqual([]);
+    expect(view.monthly.rows).toEqual([]);
+    expect(view.startDate).toBe("2024-10-08");
+    expect(view.firstRecordDate).toBe("2024-10-09");
+    expect(view.calendar.range.start).toBe("2024-10-01");
+
+    const start = await getDayEditView(me, d("2024-10-08"), now);
+    expect(start.beforeStart).toBe(false);
+
+    const nobody = await createUser();
+    const empty = await getDayEditView(nobody, d("2024-11-06"), now);
+    expect(empty.beforeStart).toBe(true);
+    expect(empty.startDate).toBeNull();
+    expect(empty.firstRecordDate).toBeNull();
+    expect(empty.calendar.range).toEqual({
+      start: "2024-11-01",
+      end: "2024-11-06",
+    });
+  });
+
+  it("習慣を始めた日より前の月を開くと、カレンダーはその月の1日から", async () => {
+    const me = await createUser();
+    await createHabit(me, checkHabit(), { createdOn: "2024-10-08" });
+    const view = await getDayEditView(me, d("2024-08-20"), now);
+    expect(view.beforeStart).toBe(true);
+    expect(view.calendar.range.start).toBe("2024-08-01");
+  });
+
+  it("他人の習慣・記録は含めない", async () => {
+    const me = await createUser();
+    const other = await createUser();
+    const theirs = await createHabit(other, checkHabit({ name: "他人" }));
+    await toggleCheck(other, theirs, d("2024-10-29"));
+
+    const view = await getDayEditView(me, d("2024-10-29"), now);
+    expect(view.daily).toEqual([]);
+    expect(view.firstRecordDate).toBeNull();
+    expect(view.calendar.grass.every((c) => c.level === 0)).toBe(true);
+  });
+
+  it("未来の日付は invalid", async () => {
+    const me = await createUser();
+    await expect(
+      getDayEditView(me, d("2024-11-07"), now),
+    ).rejects.toMatchObject({ code: "invalid" });
   });
 });

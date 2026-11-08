@@ -98,13 +98,29 @@ export interface ReviewView {
   firstRecordDate: LogicalDate | null;
 }
 
+/**
+ * ② の表示用データ。行はその日に「現在の習慣」だったもの（isActiveOn）を並び順に。
+ * 各行の entries はその行の期間（progress.range）の記録。streak は入れない
+ */
 export interface DayEditView {
   date: LogicalDate;
   daily: RecordRow[];
   weekly: { range: DateRange; rows: RecordRow[] };
   monthly: { range: DateRange; rows: RecordRow[] };
-  /** 習慣を始める前の日なら true（E4） */
+  /** 習慣を始める前の日なら true（E4）。date < startDate、または習慣が1つもない */
   beforeStart: boolean;
+  /** サーバーで決めた今日（日付ナビの上限） */
+  today: LogicalDate;
+  weekStart: WeekStart;
+  /** 習慣を始めた日：過去の習慣も含め、いちばん古い作った日。習慣がなければ null */
+  startDate: LogicalDate | null;
+  /** いちばん古い記録の日（E4 の文と「最初の記録の日へ」。記録がなければ null） */
+  firstRecordDate: LogicalDate | null;
+  /**
+   * 日付を選ぶカレンダー（⑥-b と同じ）の草。すべての習慣の4段階。
+   * startDate と date のうち前のほうを含む月の1日から、今日まで
+   */
+  calendar: { range: DateRange; grass: GrassCell[] };
 }
 
 // ── ③ 習慣の詳細 ───────────────────────
