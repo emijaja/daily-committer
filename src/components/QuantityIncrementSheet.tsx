@@ -61,6 +61,12 @@ export function QuantityIncrementSheet({
   onAdd,
 }: QuantityIncrementSheetProps) {
   const [text, setText] = useState("");
+  // 開いたときに入力を空に戻す（描画中に前回の open と比べる。Effect は使わない）
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setText("");
+  }
   const amount = parseQuantity(text);
 
   const subtitle = [

@@ -78,7 +78,8 @@ export interface StatMoreBoxProps {
   label: ReactNode;
   /** 下の文字（既定：すべて見る） */
   action?: ReactNode;
-  onPress?: () => void;
+  /** 押したとき（一覧を開く）。押せない箱にはしないので必須 */
+  onPress: () => void;
   className?: string;
 }
 

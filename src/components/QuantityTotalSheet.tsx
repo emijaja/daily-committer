@@ -31,7 +31,7 @@ export interface QuantityTotalSheetProps {
 
 /**
  * ⑧-a 量の記録：合計を入力。
- * −／＋・チップ・直接入力で合計を決めて記録する。開くたびに key を変えると初期値に戻る。
+ * −／＋・チップ・直接入力で合計を決めて記録する。開くたびに入力は initialValue に戻る。
  */
 export function QuantityTotalSheet({
   open,
@@ -45,7 +45,13 @@ export function QuantityTotalSheet({
   steps = [1, 5, 10],
   onSubmit,
 }: QuantityTotalSheetProps) {
-  const [text, setText] = useState(formatQuantity(initialValue));
+  const [text, setText] = useState(() => formatQuantity(initialValue));
+  // 開いたときに入力を initialValue に戻す（描画中に前回の open と比べる。Effect は使わない）
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setText(formatQuantity(initialValue));
+  }
   const value = parseQuantity(text);
   const set = (n: number) => setText(formatQuantity(Math.max(0, n)));
 

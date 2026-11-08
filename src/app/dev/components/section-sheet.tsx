@@ -58,7 +58,6 @@ export function SheetSection() {
             </Pill>
           </BottomSheet>
           <QuantityTotalSheet
-            key={sheet === "total" ? "total-open" : "total"}
             open={sheet === "total"}
             onClose={() => setSheet(null)}
             title="Workout"
@@ -73,7 +72,6 @@ export function SheetSection() {
             }}
           />
           <QuantityIncrementSheet
-            key={sheet === "inc" ? "inc-open" : "inc"}
             open={sheet === "inc"}
             onClose={() => setSheet(null)}
             title="Running"

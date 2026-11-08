@@ -39,11 +39,13 @@ export function Toast({
     onCloseRef.current = onClose;
   });
 
+  // 表示中に親が描き直されても（message の JSX が毎回変わっても）タイマーを延ばさない。
+  // 続けて記録したときなどに時間を数え直したいときは、呼び出し側で key を変える
   useEffect(() => {
     if (!open || duration <= 0) return;
     const id = setTimeout(() => onCloseRef.current?.(), duration);
     return () => clearTimeout(id);
-  }, [open, duration, message]);
+  }, [open, duration]);
 
   return (
     <div
