@@ -7,7 +7,7 @@ import {
   useState,
   useTransition,
 } from "react";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState, EmptyStateLink } from "@/components/EmptyState";
 import { HabitList, HabitRow, type HabitRowProps } from "@/components/HabitRow";
 import { Icon } from "@/components/icons";
 import { PillLink } from "@/components/Pill";
@@ -410,6 +410,9 @@ function RecordEmpty({
             >
               習慣を追加する
             </PillLink>
+            <EmptyStateLink href="/habits/presets">
+              おすすめから選ぶ
+            </EmptyStateLink>
           </>
         }
       />
