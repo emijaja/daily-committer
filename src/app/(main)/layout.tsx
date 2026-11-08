@@ -16,7 +16,10 @@ export default function MainLayout({ children }: LayoutProps<"/">) {
         <OnboardingGate />
       </Suspense>
       <div className="flex-1">{children}</div>
-      <MainTabBar className="sticky bottom-0" />
+      {/* usePathname は動的なルート（/habits/[id] など）で Suspense の内側に置く必要がある */}
+      <Suspense fallback={null}>
+        <MainTabBar className="sticky bottom-0" />
+      </Suspense>
     </div>
   );
 }
