@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { isOnboarded, requireUser } from "@/server/auth";
-import { TabBar } from "./tab-bar";
+import { requireUser } from "@/server/auth";
+import { isOnboarded } from "@/server/services/settings";
+import { MainTabBar } from "./main-tab-bar";
 
 /**
  * 下部タブのある画面の外枠（architecture.md 2章・5章）。
@@ -15,7 +16,10 @@ export default function MainLayout({ children }: LayoutProps<"/">) {
         <OnboardingGate />
       </Suspense>
       <div className="flex-1">{children}</div>
-      <TabBar />
+      {/* usePathname は動的なルート（/habits/[id] など）で Suspense の内側に置く必要がある */}
+      <Suspense fallback={null}>
+        <MainTabBar className="sticky bottom-0" />
+      </Suspense>
     </div>
   );
 }

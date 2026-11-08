@@ -31,6 +31,14 @@ export async function updateSettings(
   return updated;
 }
 
+/**
+ * オンボーディングを終えているか（user_settings.onboarded_at が入っているか）。
+ * 設定の行がない場合も「終えていない」とみなす。
+ */
+export async function isOnboarded(userId: UserId): Promise<boolean> {
+  return (await settingsRepo.findOnboardedAt(db, userId)) != null;
+}
+
 /** オンボーディングの完了（O4 の最後）。onboarded_at を記録する（2回目以降は最初の日時のまま） */
 export async function completeOnboarding(
   userId: UserId,

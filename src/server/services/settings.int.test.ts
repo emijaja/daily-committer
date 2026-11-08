@@ -13,6 +13,7 @@ import {
   completeOnboarding,
   deleteAccount,
   getSettings,
+  isOnboarded,
   updateSettings,
 } from "./settings";
 
@@ -72,6 +73,18 @@ describe("completeOnboarding", () => {
       .from(userSettings)
       .where(eq(userSettings.userId, me));
     expect(row?.onboardedAt?.toISOString()).toBe(first.toISOString());
+  });
+});
+
+describe("isOnboarded", () => {
+  it("設定の行がない・onboarded_at が NULL なら false、完了後は true", async () => {
+    const id = "user-without-settings-onboarding";
+    await db.insert(user).values({ id, name: "x", email: "y@example.com" });
+    expect(await isOnboarded(id)).toBe(false);
+    const me = await createUser();
+    expect(await isOnboarded(me)).toBe(false);
+    await completeOnboarding(me);
+    expect(await isOnboarded(me)).toBe(true);
   });
 });
 

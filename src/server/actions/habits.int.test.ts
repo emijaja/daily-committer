@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fakeToLogicalDate } from "@/server/testing/fake-date";
 import {
   checkHabit,
   createHabit,
@@ -17,10 +16,6 @@ vi.mock("@/server/auth", () => ({
   })),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-vi.mock("@/domain/date", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/domain/date")>()),
-  toLogicalDate: fakeToLogicalDate,
-}));
 
 const { revalidatePath } = await import("next/cache");
 const actions = await import("./habits");
