@@ -9,6 +9,7 @@ import {
 } from "react";
 import { EmptyState } from "@/components/EmptyState";
 import { HabitList, HabitRow, type HabitRowProps } from "@/components/HabitRow";
+import { Icon } from "@/components/icons";
 import { PillLink } from "@/components/Pill";
 import { formatQuantity } from "@/components/quantity";
 import { SegmentTabs } from "@/components/SegmentTabs";
@@ -364,23 +365,26 @@ const EMPTY_PERIOD: Record<
   daily: {
     title: "毎日の習慣はまだないよ",
     description: "「毎日 読書」のように、\n毎日続ける習慣を追加できます。",
-    action: "＋ 毎日の習慣を追加",
+    action: "毎日の習慣を追加",
   },
   weekly: {
     title: "週の習慣はまだないよ",
     description:
       "「週3回ランニング」のように、\n週ごとの回数で続ける習慣を追加できます。",
-    action: "＋ 週の習慣を追加",
+    action: "週の習慣を追加",
   },
   monthly: {
     title: "月の習慣はまだないよ",
     description:
       "「月1回 家計簿」のように、\n月ごとの回数で続ける習慣を追加できます。",
-    action: "＋ 月の習慣を追加",
+    action: "月の習慣を追加",
   },
 };
 
-/** 空の状態：E1（習慣がまだない）／E2（その期間の習慣がない） */
+/**
+ * 空の状態：E1（習慣がまだない）／E2（その期間の習慣がない）。
+ * Figma ではキャラ・文・ボタンのまとまりが本文の上下中央に来る。812 の高さで同じ位置になるよう上の余白を決めている
+ */
 function RecordEmpty({
   period,
   noHabits,
@@ -391,26 +395,40 @@ function RecordEmpty({
   if (noHabits) {
     return (
       <EmptyState
-        className="mt-16"
+        className="mt-[80px]"
         expression="normal"
+        mascotSize={250}
         title="まだ習慣がありません"
         description={
           "ぶら下がってるだけの毎日も、わるくないけど…。\nまずは1つ、登録してみよう。"
         }
-        actions={<PillLink href="/habits/new">＋ 習慣を追加する</PillLink>}
+        actions={
+          <>
+            <PillLink
+              href="/habits/new"
+              leading={<Icon name="plus" size={14} />}
+            >
+              習慣を追加する
+            </PillLink>
+          </>
+        }
       />
     );
   }
   const text = EMPTY_PERIOD[period];
   return (
     <EmptyState
-      className="mt-24"
+      className="mt-[118px]"
       expression="sleepy"
-      mascotSize={180}
+      mascotSize={190}
       title={text.title}
       description={text.description}
       actions={
-        <PillLink href="/habits/new" variant="secondary">
+        <PillLink
+          href="/habits/new"
+          variant="secondary"
+          leading={<Icon name="plus" size={14} />}
+        >
           {text.action}
         </PillLink>
       }
