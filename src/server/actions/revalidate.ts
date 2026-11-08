@@ -29,6 +29,7 @@ export function revalidateRecords(): void {
 export function revalidateHabits(): void {
   revalidateRecords();
   revalidatePath("/habits");
+  revalidatePath("/habits/presets");
   revalidatePath("/(main)/habits/[id]/edit", "page");
 }
 

@@ -153,9 +153,12 @@ export function HabitListScreen({ view }: { view: HabitListView }) {
             title="まだ習慣がありません"
             description={"右上の ＋ から、続けたい習慣を\n追加しましょう。"}
             actions={
-              <PillLink href="/habits/new" leading={<Icon name="plus" />}>
-                習慣を追加する
-              </PillLink>
+              <>
+                <PillLink href="/habits/new" leading={<Icon name="plus" />}>
+                  習慣を追加する
+                </PillLink>
+                <PresetsLink />
+              </>
             }
           />
         ) : (
@@ -198,6 +201,11 @@ export function HabitListScreen({ view }: { view: HabitListView }) {
               </HabitList>
             </section>
           ))}
+          {isActive && !sorting ? (
+            <div className="flex justify-center">
+              <PresetsLink />
+            </div>
+          ) : null}
         </div>
       )}
 
@@ -208,6 +216,21 @@ export function HabitListScreen({ view }: { view: HabitListView }) {
         onClose={() => setToast(null)}
       />
     </>
+  );
+}
+
+/**
+ * おすすめから選ぶ（/habits/presets、open-questions.md B14）への入り口。
+ * Figma の ④ には入り口がないので、E1 と同じ下線リンクを現在の習慣の一覧の下（空のときは追加ボタンの下）に置く。
+ */
+function PresetsLink() {
+  return (
+    <Link
+      href="/habits/presets"
+      className="min-h-11 content-center text-[12px] font-bold underline underline-offset-2"
+    >
+      おすすめから選ぶ
+    </Link>
   );
 }
 
