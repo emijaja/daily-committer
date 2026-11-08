@@ -4,14 +4,15 @@ import { usePathname } from "next/navigation";
 import { TabBar, type TabKey } from "@/components/TabBar";
 
 /**
- * 下部タブを出す画面（タブの最上位の画面）と、そのときの選択中のタブ。
- * 戻るボタンのある画面（② 記録の確認・修正、③ 習慣の詳細、⑤ 追加・編集、⑦ 設定）には出さない（Figma に合わせる）。
+ * 今のパスから、下部タブの選択中のタブを決める（Figma に合わせる）。
+ * - ⑤ 習慣の追加・編集（/habits/new、/habits/[id]/edit）は下部タブを出さない（null）
+ * - ② 記録の確認・修正は「振り返り」、③ 習慣の詳細は「習慣」、⑦ 設定は ①-a の歯車から開くので「記録」
  */
 function tabFor(pathname: string): TabKey | null {
-  if (/^\/record\/(today|week|month)\/?$/.test(pathname)) return "record";
-  if (/^\/review\/?$/.test(pathname)) return "review";
-  if (/^\/habits\/?$/.test(pathname)) return "habits";
-  return null;
+  if (/^\/habits\/(new|[^/]+\/edit)\/?$/.test(pathname)) return null;
+  if (pathname.startsWith("/review")) return "review";
+  if (pathname.startsWith("/habits")) return "habits";
+  return "record";
 }
 
 /** (main) の下部タブ。今のパスから、出すかどうかと選択中のタブを決める */
