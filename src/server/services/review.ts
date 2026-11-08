@@ -52,24 +52,27 @@ export interface ReviewSource {
   today: LogicalDate;
   /** 過去の習慣も含むすべての習慣（並び順） */
   habits: Habit[];
-  /** span の範囲の記録（日付の古い順） */
+  /** span の範囲の記録（日付の古い順）。habitIds を渡したときはその習慣の分だけ */
   entries: Entry[];
 }
 
 /**
  * 設定・今日・すべての習慣を取得し、span が返す範囲の記録をまとめて1回で取得する。
  * span は習慣と今日から、必要な記録の範囲を決める（③でも使う）。
+ * habitIds を渡すと、記録はその習慣の分だけを取得する（③は1つの習慣しか使わないため）。
  */
 export async function loadReviewSource(
   userId: UserId,
   now: Date,
   span: (habits: readonly Habit[], today: LogicalDate) => DateRange,
+  options: { habitIds?: readonly string[] } = {},
 ): Promise<ReviewSource> {
   const settings = await getSettings(userId);
   const today = todayFor(settings, now);
   const habits = (await habitsRepo.listHabits(db, userId, "all")).map(toHabit);
   const entries = await entriesRepo.listEntries(db, userId, {
     range: span(habits, today),
+    habitIds: options.habitIds,
   });
   return { settings, today, habits, entries };
 }
@@ -286,17 +289,17 @@ export async function getHabitDetail(
         end: today,
       };
     },
+    { habitIds: [habitId] },
   );
   const habit = habits.find((h) => h.id === habitId);
   if (!habit) return null;
 
-  const own = entries.filter((e) => e.habitId === habit.id);
-  const input = { habit, entries: own, today, weekStart: settings.weekStart };
+  const input = { habit, entries, today, weekStart: settings.weekStart };
   const current = currentStreak(input);
   const longest = longestStreak(input);
   const personalBest = isPersonalBest(input);
   const grassRange = habitDetailGrassRange(habit, today);
-  const grass = habitGrass(habit.id, own, grassRange);
+  const grass = habitGrass(habit.id, entries, grassRange);
 
   return {
     habit,
