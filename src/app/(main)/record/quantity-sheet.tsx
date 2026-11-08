@@ -19,7 +19,10 @@ import { isTempId } from "./record-optimistic";
 export interface QuantitySheetProps {
   /** 開いている習慣の行。null なら閉じている */
   row: RecordRow | null;
+  /** 記録する日（① では今日、② では選んだ日） */
   today: LogicalDate;
+  /** ⑧-b の追加ボタンの上の文。省略すると「今日（金 11/1）の分を追加」 */
+  addLabel?: string;
   onClose: () => void;
   /** ⑧-a：今日の合計を上書きする */
   onSetTotal: (row: RecordRow, quantity: number) => void;
@@ -43,6 +46,7 @@ function periodLabel(period: Period, row: RecordRow, today: LogicalDate) {
 export function QuantitySheet({
   row,
   today,
+  addLabel,
   onClose,
   onSetTotal,
   onAdd,
@@ -74,7 +78,9 @@ export function QuantitySheet({
           // 楽観的に足したばかりの記録は、サーバーの ID が届くまで消せない
           if (!isTempId(id)) onDelete(row, id);
         }}
-        addLabel={`今日（${dowLabel(today)} ${shortDate(today)}）の分を追加`}
+        addLabel={
+          addLabel ?? `今日（${dowLabel(today)} ${shortDate(today)}）の分を追加`
+        }
         onAdd={(amount) => onAdd(row, amount)}
       />
     );
