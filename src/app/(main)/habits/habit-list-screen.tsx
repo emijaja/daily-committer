@@ -63,7 +63,11 @@ function applyAction(state: ListState, action: OptimisticAction): ListState {
   return state;
 }
 
-/** ④ の上部タブから下。並べ替えと「戻す」は楽観的に更新し、失敗したらトーストで知らせる */
+/**
+ * ④ の上部タブから下。並べ替えと「戻す」は楽観的に更新し、失敗したらトーストで知らせる。
+ * 失敗したときの巻き戻しは書かなくてよい：useOptimistic の値は transition が終わると捨てられ、
+ * 元の view に戻る。失敗時はサーバーで revalidate されないので、view は操作前の並びのまま。
+ */
 export function HabitListScreen({ view }: { view: HabitListView }) {
   const [state, apply] = useOptimistic<ListState, OptimisticAction>(
     { counts: view.counts, groups: view.groups },
