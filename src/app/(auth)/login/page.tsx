@@ -31,7 +31,7 @@ export default function LoginPage(props: PageProps<"/login">) {
           記録を残すために、ログイン
         </p>
         <p className="text-body mt-1.5 leading-[21px] text-gray-600">
-          日々のことを、すこしずつ記録していきましょう。まずはアカウント登録から始めましょう。
+          習慣と記録はアカウントに保存されます。機種変更しても、草はそのまま。
         </p>
       </div>
       <div className="mt-5">
