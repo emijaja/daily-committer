@@ -132,9 +132,6 @@ export function SettingsScreen({
             <Chevron />
           </a>
         </li>
-        <Row label="バックアップ" disabled>
-          <Value>{NOT_YET}</Value>
-        </Row>
       </Section>
 
       <Section tag="ACCOUNT" title="アカウント">
@@ -166,9 +163,6 @@ export function SettingsScreen({
       </Section>
 
       <Section tag="OTHER" title="その他">
-        <Row label="ヘルプ" disabled>
-          <Value>{NOT_YET}</Value>
-        </Row>
         <Row label="バージョン">
           <span className="font-latin text-[13px] font-bold text-gray-500">
             {version}
