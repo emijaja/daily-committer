@@ -151,26 +151,6 @@ export async function createHabit(
   return row.id;
 }
 
-export async function createEntry(
-  userId: string,
-  habitId: string,
-  date: LogicalDate,
-  quantity: number | null = null,
-): Promise<void> {
-  const [habit] = await db()
-    .select({ multiplePerDay: habits.multiplePerDay })
-    .from(habits)
-    .where(eq(habits.id, habitId));
-  if (!habit) throw new Error("習慣が見つかりません");
-  await db().insert(entries).values({
-    userId,
-    habitId,
-    date,
-    quantity,
-    multiplePerDay: habit.multiplePerDay,
-  });
-}
-
 /** そのユーザーの記録（日付の古い順） */
 export async function entriesOf(userId: string) {
   return db()
