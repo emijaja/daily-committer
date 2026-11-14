@@ -7,7 +7,8 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Client } from "pg";
 import { databaseName, testDatabaseUrl } from "./test-database-url";
 
-async function ensureDatabase(url: string): Promise<void> {
+/** DB がなければ作る（同じサーバーの postgres DB に接続して作る） */
+export async function ensureDatabase(url: string): Promise<void> {
   const name = databaseName(url);
   const admin = new URL(url);
   admin.pathname = "/postgres";
@@ -26,10 +27,8 @@ async function ensureDatabase(url: string): Promise<void> {
   }
 }
 
-export default async function setup(): Promise<void> {
-  const url = testDatabaseUrl();
-  if (!process.env.CI) await ensureDatabase(url);
-
+/** マイグレーションを当てる（適用済みなら何もしない） */
+export async function migrateDatabase(url: string): Promise<void> {
   const client = new Client({ connectionString: url });
   await client.connect();
   try {
@@ -37,4 +36,10 @@ export default async function setup(): Promise<void> {
   } finally {
     await client.end();
   }
+}
+
+export default async function setup(): Promise<void> {
+  const url = testDatabaseUrl();
+  if (!process.env.CI) await ensureDatabase(url);
+  await migrateDatabase(url);
 }
