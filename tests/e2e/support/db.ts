@@ -83,7 +83,9 @@ export async function createTestUser(
     id: randomUUID(),
     userId: id,
     token: sessionToken,
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    // Better Auth の既定（expiresIn 7日）と同じにする。短いと作った直後から
+    // 「更新が必要なセッション」になり、読むたびに更新と Set-Cookie が走る
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   });
   return { id, email, timezone, dayStartHour, sessionToken };
 }
