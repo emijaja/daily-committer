@@ -1,7 +1,9 @@
 /**
  * E2E テスト（Playwright）の設定。`pnpm test:e2e` で実行する。対象は tests/e2e/。
  * 本番ビルドのサーバー（next start）をポート 3314 で起動し、モバイル幅の Chromium で動かす。
- * - ローカル：起動の前に next build する。すでに 3314 でサーバーが動いていればそれを使う
+ * サーバーの起動前に E2E 用の DB を用意する（tests/e2e/prepare-db.ts）。
+ * - ローカル：起動の前に next build する。3314 にすでにサーバーがあればエラーにする
+ *   （古いビルドや別の DB のサーバーを黙って使わないため。止めてから実行する）
  * - CI：前の手順の pnpm build の結果をそのまま使う
  * 接続先の DB は tests/e2e/support/env.ts を参照。
  */
@@ -23,7 +25,6 @@ process.env.E2E_DATABASE_URL = e2eDatabaseUrl();
 export default defineConfig({
   testDir: "tests/e2e",
   testMatch: "**/*.spec.ts",
-  globalSetup: "./tests/e2e/global-setup.ts",
   fullyParallel: true,
   forbidOnly: isCi,
   retries: isCi ? 1 : 0,
@@ -45,11 +46,13 @@ export default defineConfig({
   },
   projects: [{ name: "mobile-chromium" }],
   webServer: {
-    command: isCi
-      ? `pnpm start --port ${E2E_PORT}`
-      : `pnpm build && pnpm start --port ${E2E_PORT}`,
+    command: [
+      "pnpm exec tsx tests/e2e/prepare-db.ts",
+      ...(isCi ? [] : ["pnpm build"]),
+      `pnpm start --port ${E2E_PORT}`,
+    ].join(" && "),
     url: `${BASE_URL}/onboarding`,
-    reuseExistingServer: !isCi,
+    reuseExistingServer: false,
     timeout: 180_000,
     env: {
       DATABASE_URL: process.env.E2E_DATABASE_URL,

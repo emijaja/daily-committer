@@ -165,7 +165,7 @@ tests/e2e/         Playwright
 ### E2E の動かし方
 
 - 初回だけブラウザを入れる：`pnpm exec playwright install chromium`
-- `pnpm test:e2e` で実行する。`playwright.config.ts` が `next build` → `next start --port 3314` を起動し、幅 375 の Chromium で `tests/e2e/*.spec.ts` を動かす（3314 でサーバーが動いていればそれを使う）。CI では直前の `pnpm build` の結果を使う。
+- `pnpm test:e2e` で実行する。`playwright.config.ts` が E2E 用の DB の準備（`tests/e2e/prepare-db.ts`）→ `next build` → `next start --port 3314` を起動し、幅 375 の Chromium で `tests/e2e/*.spec.ts` を動かす。3314 にすでにサーバーがあるとエラーになるので、止めてから実行する（古いビルドや別の DB のサーバーを使わないため）。CI では直前の `pnpm build` の結果を使う。
 - 接続先の DB：ローカルは `.env.local` の `DATABASE_URL` の DB 名に `_e2e` を付けた DB（例：`confidently_e2e`）。なければ作ってマイグレーションする。`E2E_DATABASE_URL` で変えられる。CI は `DATABASE_URL`。
 - ログイン：テストの中で DB にユーザーとセッションを作り、`BETTER_AUTH_SECRET` で署名したセッションの cookie（`better-auth.session_token`）をブラウザに入れる（`tests/e2e/support/auth.ts`）。**アプリにはテスト用のログインの入口を作らない。**
 - テストごとに別のユーザーを作り、終わったら消す（`tests/e2e/fixtures.ts` の `signedInUser`）ので、並列に走っても干渉しない。

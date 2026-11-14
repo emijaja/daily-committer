@@ -38,8 +38,15 @@ export async function migrateDatabase(url: string): Promise<void> {
   }
 }
 
-export default async function setup(): Promise<void> {
-  const url = testDatabaseUrl();
+/**
+ * テスト用の DB を使える状態にする（統合テスト・E2E で共通）。
+ * CI では DB はすでにある（作る権限もない）ので、マイグレーションだけ当てる。
+ */
+export async function prepareDatabase(url: string): Promise<void> {
   if (!process.env.CI) await ensureDatabase(url);
   await migrateDatabase(url);
+}
+
+export default async function setup(): Promise<void> {
+  await prepareDatabase(testDatabaseUrl());
 }
