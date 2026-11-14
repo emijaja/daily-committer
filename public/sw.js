@@ -8,7 +8,7 @@
  * 中身を変えたら CACHE_VERSION を上げること（古いキャッシュは activate で消える）。
  * 通知（push・notificationclick）は最終フェーズでここに足す。
  */
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const PRECACHE = `precache-${CACHE_VERSION}`;
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline.html";
