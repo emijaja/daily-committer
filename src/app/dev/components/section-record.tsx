@@ -237,7 +237,6 @@ export function RecordSection() {
               </>
             }
             message="あと1つで、今日はコンプリート！"
-            onMessagePress={() => setLog("ひとことを押した")}
           />
         </Sample>
         <Sample label="全部できた／タグなし">

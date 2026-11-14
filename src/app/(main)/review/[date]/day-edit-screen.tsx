@@ -12,6 +12,7 @@ import { CalendarModal } from "@/components/CalendarModal";
 import { EmptyState } from "@/components/EmptyState";
 import { HabitList, HabitRow, type HabitRowProps } from "@/components/HabitRow";
 import { Marker } from "@/components/Marker";
+import { Icon } from "@/components/icons";
 import { PillLink } from "@/components/Pill";
 import { formatQuantity } from "@/components/quantity";
 import { SectionHeading } from "@/components/SectionHeading";
@@ -47,6 +48,7 @@ import {
 import {
   dayEditCaption,
   dayEditWeekDays,
+  editHint,
   monthHeading,
   weekHeading,
 } from "./day-edit-format";
@@ -388,15 +390,16 @@ export function DayEditScreen({ view }: { view: DayEditView }) {
   }
 
   const hasRows = daily.length + weekly.length + monthly.length > 0;
+  const hint = editHint(weekly.length > 0, monthly.length > 0);
 
   return (
     <div className="px-screen-x">
       {nav}
       {!hasRows ? (
         <EmptyState
-          className="mt-16"
+          className="mt-[84px]"
           expression="sleepy"
-          mascotSize={180}
+          mascotSize={200}
           title="この日の習慣はありません"
           description="この日に続けていた習慣はありません。"
         />
@@ -439,9 +442,9 @@ export function DayEditScreen({ view }: { view: DayEditView }) {
           </HabitList>
         </section>
       ) : null}
-      {weekly.length + monthly.length > 0 ? (
+      {hint ? (
         <p className="text-caption mt-4">
-          <Marker>週次は曜日を、月次は右のボタンをタップして修正します</Marker>
+          <Marker>{hint}</Marker>
         </p>
       ) : null}
 
@@ -476,14 +479,18 @@ function BeforeStart({ view }: { view: DayEditView }) {
   if (first === null) {
     return (
       <EmptyState
-        className="mt-16"
+        className="mt-[84px]"
         expression="sleepy"
-        mascotSize={180}
+        mascotSize={200}
         title="まだ習慣がありません"
         description={"習慣を追加すると、\nここで記録を確認・修正できます。"}
         actions={
-          <PillLink href="/habits/new" variant="secondary">
-            ＋ 習慣を追加する
+          <PillLink
+            href="/habits/new"
+            variant="secondary"
+            leading={<Icon name="plus" size={14} />}
+          >
+            習慣を追加する
           </PillLink>
         }
       />
@@ -495,9 +502,9 @@ function BeforeStart({ view }: { view: DayEditView }) {
       : `習慣を始めたのは ${jaDate(first)}から。`;
   return (
     <EmptyState
-      className="mt-16"
+      className="mt-[84px]"
       expression="sleepy"
-      mascotSize={180}
+      mascotSize={200}
       title="この日は、まだ習慣を始める前です"
       description={`${lead}\nこの日はぼくと同じく、のんびりしてた日。`}
       actions={

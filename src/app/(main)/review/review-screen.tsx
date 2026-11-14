@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CalendarModal } from "@/components/CalendarModal";
-import { cx, HIT_AREA } from "@/components/cx";
-import { EmptyState } from "@/components/EmptyState";
+import { cx } from "@/components/cx";
+import { EmptyState, EmptyStateLink } from "@/components/EmptyState";
 import { GrassCard } from "@/components/GrassHeatmap";
 import { Icon } from "@/components/icons";
 import { Marker } from "@/components/Marker";
@@ -111,21 +111,13 @@ export function ReviewScreen({ view }: { view: ReviewView }) {
         <EmptyState
           expression="sleepy"
           mascotSize={170}
-          className="mt-14"
+          className="mt-11"
           title="まだ何もないね…。ぼくといっしょ。"
           description={
             "記録が3日たまると「達成していること」と\n「もう少しで達成」がここに並びます。"
           }
           actions={
-            <Link
-              href="/record/today"
-              className={cx(
-                "text-[13px] font-bold underline underline-offset-4",
-                HIT_AREA,
-              )}
-            >
-              記録画面へ
-            </Link>
+            <EmptyStateLink href="/record/today">記録画面へ</EmptyStateLink>
           }
         />
       ) : (

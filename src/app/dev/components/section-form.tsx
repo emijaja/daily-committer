@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState, EmptyStateLink } from "@/components/EmptyState";
 import {
   GoalBlock,
   NumberStepper,
@@ -136,6 +135,7 @@ export function FormSection() {
         <Sample label="E1 記録：習慣がまだない" bleed>
           <EmptyState
             expression="normal"
+            mascotSize={250}
             title="まだ習慣がありません"
             description={
               "ぶら下がってるだけの毎日も、わるくないけど…。\nまずは1つ、登録してみよう。"
@@ -145,12 +145,9 @@ export function FormSection() {
                 <Pill leading={<Icon name="plus" size={14} />}>
                   習慣を追加する
                 </Pill>
-                <Link
-                  href="/dev/components"
-                  className="min-h-11 content-center text-[12px] font-bold underline underline-offset-2"
-                >
+                <EmptyStateLink href="/dev/components">
                   おすすめから選ぶ
-                </Link>
+                </EmptyStateLink>
               </>
             }
           />
@@ -158,7 +155,7 @@ export function FormSection() {
         <Sample label="E2 記録：今週の習慣がない" bleed>
           <EmptyState
             expression="sleepy"
-            mascotSize={180}
+            mascotSize={190}
             title="週の習慣はまだないよ"
             description={
               "「週3回ランニング」のように、\n週ごとの回数で続ける習慣を追加できます。"
@@ -173,12 +170,41 @@ export function FormSection() {
             }
           />
         </Sample>
-        <Sample label="E4 記録の確認：始める前の日（キャラなし）" bleed>
+        <Sample label="E3 振り返り：記録がない（下線リンクだけ）" bleed>
+          <EmptyState
+            expression="sleepy"
+            mascotSize={170}
+            title="まだ何もないね…。ぼくといっしょ。"
+            description={
+              "記録が3日たまると「達成していること」と\n「もう少しで達成」がここに並びます。"
+            }
+            actions={
+              <EmptyStateLink href="/dev/components">記録画面へ</EmptyStateLink>
+            }
+          />
+        </Sample>
+        <Sample label="E4 記録の確認：始める前の日" bleed>
+          <EmptyState
+            expression="sleepy"
+            mascotSize={200}
+            title="この日は、まだ習慣を始める前です"
+            description={
+              "いちばん古い記録は 10月8日（火）から。\nこの日はぼくと同じく、のんびりしてた日。"
+            }
+            actions={
+              <Pill variant="secondary" block>
+                最初の記録の日へ
+              </Pill>
+            }
+          />
+        </Sample>
+        <Sample label="キャラなし（⑤ 過去の習慣が0件）" bleed>
           <EmptyState
             expression={null}
-            title="この日は、まだ習慣を始める前です"
-            description="いちばん古い記録は 10月8日（火）から。"
-            actions={<Pill variant="secondary">最初の記録の日へ</Pill>}
+            title="過去の習慣はありません"
+            description={
+              "習慣の編集で「過去の習慣にする」と、ここに移ります。\n記録と草は残ります。"
+            }
           />
         </Sample>
       </CatalogSection>
