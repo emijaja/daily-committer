@@ -121,6 +121,20 @@ describe("createHabitsFromPresets（オンボーディング）", () => {
       "瞑想",
     ]);
   });
+
+  it("同時に送られても重複して登録しない（二度押し・2つのタブ）", async () => {
+    // 1回だけだと競合が起きないことがあるので、数回くり返す
+    for (let round = 0; round < 5; round++) {
+      const me = await createUser();
+      const results = await Promise.all(
+        Array.from({ length: 5 }, () =>
+          habits.createHabitsFromPresets(me, ["読書", "瞑想"], now),
+        ),
+      );
+      expect(results.flat().map((h) => h.name)).toEqual(["読書", "瞑想"]);
+      expect(await habits.getActiveHabitNames(me)).toEqual(["読書", "瞑想"]);
+    }
+  });
 });
 
 describe("getHabit / getHabitList", () => {

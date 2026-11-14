@@ -95,6 +95,8 @@ export async function createHabitsFromPresets(
   if (unique.length === 0) return [];
   const createdOn = await getToday(userId, now);
   return db.transaction(async (tx) => {
+    // 同時に送られても（二度押し・2つのタブ）、先の登録が終わってから読むようにする
+    await habitsRepo.lockHabitsOfUser(tx, userId);
     const active = await habitsRepo.listHabits(tx, userId, "active");
     const existing = new Set(active.map((h) => h.name));
     const fresh = unique.filter((name) => !existing.has(name));
