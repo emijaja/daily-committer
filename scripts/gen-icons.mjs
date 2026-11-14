@@ -67,8 +67,13 @@ const outputs = [
 for (const [s, size, path] of outputs) writeFileSync(path, await png(s, size));
 
 // favicon.ico（PNG を埋め込んだ ICO。16・32・48px）
+// ICO の中の PNG は RGBA でないと Next.js のビルドが読めないので、アルファを付ける
 const sizes = [16, 32, 48];
-const images = await Promise.all(sizes.map((n) => png(any, n)));
+const images = await Promise.all(
+  sizes.map((n) =>
+    png(any, n).then((b) => sharp(b).ensureAlpha().png().toBuffer()),
+  ),
+);
 const header = Buffer.alloc(6);
 header.writeUInt16LE(0, 0); // reserved
 header.writeUInt16LE(1, 2); // type: icon
