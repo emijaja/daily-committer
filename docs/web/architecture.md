@@ -169,7 +169,7 @@ tests/e2e/         Playwright
 - 接続先の DB：ローカルは `.env.local` の `DATABASE_URL` の DB 名に `_e2e` を付けた DB（例：`confidently_e2e`）。なければ作ってマイグレーションする。`E2E_DATABASE_URL` で変えられる。CI は `DATABASE_URL`。
 - ログイン：テストの中で DB にユーザーとセッションを作り、`BETTER_AUTH_SECRET` で署名したセッションの cookie（`better-auth.session_token`）をブラウザに入れる（`tests/e2e/support/auth.ts`）。**アプリにはテスト用のログインの入口を作らない。**
 - テストごとに別のユーザーを作り、終わったら消す（`tests/e2e/fixtures.ts` の `signedInUser`）ので、並列に走っても干渉しない。
-- 日付：ユーザーのタイムゾーンを「いまがおよそ正午」になる `Etc/GMT±N` にし、ブラウザのタイムゾーンも揃える。テストの途中で1日の切り替えをまたがない。
+- 日付：ユーザーのタイムゾーンを「いまがおよそ正午」になる `Etc/GMT±N`（差が 0 のときは `UTC`）にし、ブラウザのタイムゾーンも揃える。テストの途中で1日の切り替えをまたがない。
 - 失敗したときは `test-results/` に trace とスクリーンショットが残る（`pnpm exec playwright show-trace <trace.zip>`）。CI では artifact `playwright-report` に上げる。
 
 ## 9. 開発環境・運用

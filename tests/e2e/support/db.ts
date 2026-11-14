@@ -35,10 +35,11 @@ export async function closeDb(): Promise<void> {
  * いまのローカル時刻がおよそ正午になるタイムゾーン（Etc/GMT±N）。
  * テストの途中で「1日の切り替え」（既定 4:00）や日付の変わり目をまたがないようにするため、
  * ユーザーごとにこのタイムゾーンを設定する。Etc/GMT の符号は UTC との差と逆になる（Etc/GMT-9 は UTC+9）。
+ * 差が 0 のときは "UTC" にする（ブラウザは Etc/GMT を UTC として返すので、保存される値と揃える）。
  */
 export function middayTimezone(now: Date = new Date()): string {
   const offset = 12 - now.getUTCHours(); // -11〜+12
-  if (offset === 0) return "Etc/GMT";
+  if (offset === 0) return "UTC";
   return offset > 0 ? `Etc/GMT-${offset}` : `Etc/GMT+${-offset}`;
 }
 
