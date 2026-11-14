@@ -62,6 +62,10 @@ jobs:
       - name: Playwright のブラウザを入れる
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install --with-deps --only-shell chromium
+      # キャッシュから戻るのはブラウザ本体だけで、OS のライブラリは入らないので毎回入れる
+      - name: Playwright の OS のライブラリを入れる
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
       - name: E2E tests
         run: pnpm test:e2e
       - name: E2E の結果を保存する（失敗時）
