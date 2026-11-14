@@ -5,14 +5,8 @@ import type { GrassCell, GrassLevel } from "@/domain/grass";
 import type { LogicalDate, WeekStart } from "@/domain/types";
 import { monthOf, weekdayIndex } from "./calendar-layout";
 import { cx, HIT_AREA } from "./cx";
+import { GRASS_BG } from "./grass-colors";
 import { Icon } from "./icons";
-
-export const GRASS_BG: Record<GrassLevel, string> = {
-  0: "bg-grass-0",
-  1: "bg-grass-1",
-  2: "bg-grass-2",
-  3: "bg-grass-3",
-};
 
 export interface GrassHeatmapProps {
   /** 期間の最初の日から順に、1日1マス（domain の allHabitsGrass / habitGrass の結果） */

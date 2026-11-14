@@ -1,3 +1,4 @@
+import { GRASS_BG } from "@/components/grass-colors";
 import { Icon } from "@/components/icons";
 import { PillLink } from "@/components/Pill";
 import { MascotSpeech } from "@/components/Speech";
@@ -10,15 +11,6 @@ import {
   PageDots,
   SkipLink,
 } from "../onboarding-ui";
-
-// components/GrassHeatmap の GRASS_BG と同じ色。あちらは "use client" のモジュールで、
-// Server Component から定数を読むとクライアントの参照になるため、ここに置く
-const GRASS_BG: Record<GrassLevel, string> = {
-  0: "bg-grass-0",
-  1: "bg-grass-1",
-  2: "bg-grass-2",
-  3: "bg-grass-3",
-};
 
 const COLUMNS = 20;
 const ROWS = 7;
