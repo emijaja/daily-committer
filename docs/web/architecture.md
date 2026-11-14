@@ -162,12 +162,22 @@ tests/e2e/         Playwright
 | 統合 | service ＋ repository（実際の Postgres に対して）。権限チェック、1日1行の保証 | Vitest ＋ Docker の Postgres |
 | E2E | 主要な流れ（ログイン済みの状態で記録 → 振り返り → 修正）。Google ログインはテスト用のセッションを直接作って回避する | Playwright |
 
+### E2E の動かし方
+
+- 初回だけブラウザを入れる：`pnpm exec playwright install chromium`
+- `pnpm test:e2e` で実行する。`playwright.config.ts` が `next build` → `next start --port 3314` を起動し、幅 375 の Chromium で `tests/e2e/*.spec.ts` を動かす（3314 でサーバーが動いていればそれを使う）。CI では直前の `pnpm build` の結果を使う。
+- 接続先の DB：ローカルは `.env.local` の `DATABASE_URL` の DB 名に `_e2e` を付けた DB（例：`confidently_e2e`）。なければ作ってマイグレーションする。`E2E_DATABASE_URL` で変えられる。CI は `DATABASE_URL`。
+- ログイン：テストの中で DB にユーザーとセッションを作り、`BETTER_AUTH_SECRET` で署名したセッションの cookie（`better-auth.session_token`）をブラウザに入れる（`tests/e2e/support/auth.ts`）。**アプリにはテスト用のログインの入口を作らない。**
+- テストごとに別のユーザーを作り、終わったら消す（`tests/e2e/fixtures.ts` の `signedInUser`）ので、並列に走っても干渉しない。
+- 日付：ユーザーのタイムゾーンを「いまがおよそ正午」になる `Etc/GMT±N` にし、ブラウザのタイムゾーンも揃える。テストの途中で1日の切り替えをまたがない。
+- 失敗したときは `test-results/` に trace とスクリーンショットが残る（`pnpm exec playwright show-trace <trace.zip>`）。CI では artifact `playwright-report` に上げる。
+
 ## 9. 開発環境・運用
 
 - パッケージマネージャ：pnpm。Lint・整形：ESLint ＋ Prettier。
 - ローカル：`docker compose` で Postgres を起動する。`.env.local` に Google OAuth のクライアント ID などを書く（コミットしない）。
 - 環境：local ／ preview（Vercel のプレビューデプロイ＋Neon のブランチ）／ production。
-- CI（GitHub Actions）：型チェック・Lint・ユニットテスト・統合テスト。**GitHub のリモートを用意する必要がある**。
+- CI（GitHub Actions）：型チェック・Lint・ユニットテスト・統合テスト・E2E。**GitHub のリモートを用意する必要がある**。
 
 ## 10. 承認してほしい事項
 

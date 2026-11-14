@@ -18,13 +18,14 @@ pnpm dev                     # http://localhost:3000
 
 ## コマンド
 
-| コマンド                      | 内容                                   |
-| ----------------------------- | -------------------------------------- |
-| `pnpm dev`                    | 開発サーバー                           |
-| `pnpm build`                  | 本番ビルド                             |
-| `pnpm lint`                   | ESLint                                 |
-| `pnpm typecheck`              | 型チェック（ルートの型を生成してから） |
-| `pnpm test`                   | ユニットテスト（Vitest）               |
-| `pnpm test:coverage`          | domain のカバレッジ                    |
-| `pnpm format`                 | Prettier で整形                        |
-| `pnpm db:up` / `pnpm db:down` | ローカルの Postgres の起動・停止       |
+| コマンド                      | 内容                                                                                          |
+| ----------------------------- | --------------------------------------------------------------------------------------------- |
+| `pnpm dev`                    | 開発サーバー                                                                                  |
+| `pnpm build`                  | 本番ビルド                                                                                    |
+| `pnpm lint`                   | ESLint                                                                                        |
+| `pnpm typecheck`              | 型チェック（ルートの型を生成してから）                                                        |
+| `pnpm test`                   | ユニットテスト（Vitest）                                                                      |
+| `pnpm test:coverage`          | domain のカバレッジ                                                                           |
+| `pnpm test:e2e`               | E2E テスト（Playwright）。動かし方は [architecture.md 8章](docs/web/architecture.md#8-テスト) |
+| `pnpm format`                 | Prettier で整形                                                                               |
+| `pnpm db:up` / `pnpm db:down` | ローカルの Postgres の起動・停止                                                              |
