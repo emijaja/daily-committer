@@ -33,7 +33,7 @@ describe("exportEntriesCsv", () => {
 
     // 2024-11-06 12:00（Asia/Tokyo）
     const file = await exportEntriesCsv(me, new Date("2024-11-06T03:00:00Z"));
-    expect(file.fileName).toBe("confidently-2024-11-06.csv");
+    expect(file.fileName).toBe("sanpai-2024-11-06.csv");
     expect(file.content).not.toContain("他人の習慣");
     expect(file.content).not.toContain(othersHabit);
     expect(rows(file.content)).toEqual([

@@ -8,8 +8,8 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Confidently",
-    short_name: "Confidently",
+    name: "Sanpai",
+    short_name: "Sanpai",
     description: "ゆるく、続ける。習慣記録アプリ",
     lang: "ja",
     start_url: "/",

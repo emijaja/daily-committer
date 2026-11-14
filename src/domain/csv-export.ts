@@ -54,7 +54,7 @@ function textCell(value: string): string {
   return /[",\r\n]/.test(safe) ? `"${safe.replaceAll('"', '""')}"` : safe;
 }
 
-/** ダウンロードのファイル名。例 confidently-2024-11-06.csv */
+/** ダウンロードのファイル名。例 sanpai-2024-11-06.csv */
 export function exportFileName(today: string): string {
-  return `confidently-${today}.csv`;
+  return `sanpai-${today}.csv`;
 }

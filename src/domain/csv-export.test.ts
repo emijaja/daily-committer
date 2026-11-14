@@ -88,6 +88,6 @@ describe("buildEntriesCsv", () => {
 
 describe("exportFileName", () => {
   it("今日の日付を入れる", () => {
-    expect(exportFileName("2024-11-06")).toBe("confidently-2024-11-06.csv");
+    expect(exportFileName("2024-11-06")).toBe("sanpai-2024-11-06.csv");
   });
 });

@@ -23,7 +23,7 @@ export default function WelcomePage() {
     >
       <OnboardingText title="Hello," heading="ゆるく、続ける。">
         {
-          "Confidently は、習慣を記録して草を育てるアプリです。\nサボりたい日は、ぼくがぼやきます。"
+          "Sanpai は、習慣を記録して草を育てるアプリです。\nサボりたい日は、ぼくがぼやきます。"
         }
       </OnboardingText>
       <PageDots current={ONBOARDING_STEP.o1} />
