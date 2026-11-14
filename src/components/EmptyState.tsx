@@ -51,7 +51,8 @@ export function EmptyState({
         </p>
       ) : null}
       {actions ? (
-        <div className="mt-7 flex w-full max-w-[220px] flex-col items-center gap-3">
+        // 下線リンクだけのとき（E3）は、説明との間を 12px にする（EmptyStateLink）
+        <div className="mt-7 flex w-full max-w-[220px] flex-col items-center gap-3 has-[>[data-empty-state-link]:first-child]:mt-3">
           {actions}
         </div>
       ) : null}
@@ -63,9 +64,9 @@ export function EmptyState({
  * 空の状態の下線リンク（E1「おすすめから選ぶ」、E3「記録画面へ」）。
  * ボタンの下では 12px あけ、リンクだけのとき（E3）は説明の 12px 下に置く。
  *
- * タップ領域はリンク自体に高さ 44px を持たせて確保する。疑似要素で上下に広げると直上のボタンと
- * 重なるので、上の余白（12px）を負のマージンで打ち消して上の padding に置き換え、
- * 文字の位置は変えずに、上端を直上の要素に接する位置から下へ 44px にする。
+ * タップ領域はリンク自体に高さ 44px（上 12＋文字 14＋下 18）を持たせて確保する。
+ * 疑似要素で上下に均等に広げると直上のボタンと重なるので、上は直上との間（12px）まで、残りは下に広げる。
+ * padding と同じだけ負のマージンで打ち消すので、組み（文字の位置・全体の高さ）は変わらない。
  */
 export function EmptyStateLink({
   className,
@@ -74,9 +75,10 @@ export function EmptyStateLink({
   return (
     <Link
       className={cx(
-        "-mt-3 inline-flex min-h-11 min-w-11 justify-center pt-3 text-[12px] leading-[14px] font-bold underline underline-offset-4 first:-mt-7",
+        "-mt-3 -mb-[18px] inline-flex min-w-11 justify-center pt-3 pb-[18px] text-[12px] leading-[14px] font-bold underline underline-offset-4",
         className,
       )}
+      data-empty-state-link=""
       {...rest}
     />
   );
