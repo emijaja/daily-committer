@@ -11,7 +11,7 @@ const notoJp = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "Confidently",
+  title: "Sanpai",
   description: "ゆるく、続ける。習慣記録アプリ",
 };
 

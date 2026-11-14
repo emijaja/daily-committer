@@ -1,4 +1,4 @@
-# Confidently
+# Sanpai
 
 ゆるく、続ける。習慣記録アプリ（PWA）。
 

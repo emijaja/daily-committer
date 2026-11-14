@@ -1,6 +1,8 @@
-# Confidently — Web版の方針と技術スタック
+# Sanpai — Web版の方針と技術スタック
 
-最終更新: 2026-11-06
+最終更新: 2026-11-14
+
+> アプリ名は 2026-11-14 に Confidently から Sanpai に変えた。画面に出ない識別子（DB のユーザー名・DB 名 `confidently` / `confidently_test` / `confidently_e2e`、リクエストヘッダー `x-confidently-return-to`）は旧名のまま残している。DB 名を変えるとローカル・CI・本番の接続先をまとめて作り直す必要があるため。変えるときは docker-compose.yml・.github/workflows/ci.yml・.env.example・src/server/testing/test-database-url.ts・tests/e2e/support/env.ts を一度に揃えること。
 
 ## 決定事項
 
