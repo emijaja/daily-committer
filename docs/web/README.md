@@ -39,4 +39,5 @@
 - [open-questions.md](open-questions.md) — 検討事項の一覧（再検討・未決定）
 - [architecture.md](architecture.md) — 設計（承認済み）
 - [implementation-plan.md](implementation-plan.md) — 実装計画（承認済み）
+- [progress.md](progress.md) — 進捗状況（どこまでできたか・本番環境・次にやること）
 - [../design/README.md](../design/README.md) — デザインの仕様
