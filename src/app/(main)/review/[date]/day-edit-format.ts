@@ -85,3 +85,20 @@ export function dayEditWeekDays(
     ariaLabel: jaDate(date),
   }));
 }
+
+/**
+ * 週次・月次の行の下の補足（黄色のマーカー）。行がある周期の分だけ書く。どちらもなければ null。
+ * 週次は曜日の四角、月次は右のボタン（＋・□。量の習慣はシートが開く）で、その日の分を直す。
+ * Figma の「月次は回数をタップ」は、月次の行に回数をタップする部品がないので使わない
+ */
+export function editHint(
+  hasWeekly: boolean,
+  hasMonthly: boolean,
+): string | null {
+  if (hasWeekly && hasMonthly) {
+    return "週次は曜日を、月次は右のボタンをタップして、その日の分を直します";
+  }
+  if (hasWeekly) return "週次は曜日をタップして、その日の分を直します";
+  if (hasMonthly) return "月次は右のボタンをタップして、この日の分を直します";
+  return null;
+}
