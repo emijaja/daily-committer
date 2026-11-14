@@ -6,3 +6,6 @@ docs
 AGENTS.md
 CLAUDE.md
 .claude
+test-results
+playwright-report
+blob-report

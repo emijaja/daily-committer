@@ -7,8 +7,9 @@ export default defineConfig({
   },
   test: {
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
-    // 統合テスト（実際の Postgres を使う）は pnpm test:integration で別に実行する
-    exclude: ["**/node_modules/**", "src/**/*.int.test.ts"],
+    // 統合テスト（実際の Postgres を使う）は pnpm test:integration、
+    // E2E（Playwright、tests/e2e/）は pnpm test:e2e で別に実行する
+    exclude: ["**/node_modules/**", "src/**/*.int.test.ts", "tests/e2e/**"],
     environment: "node",
     coverage: {
       provider: "v8",
