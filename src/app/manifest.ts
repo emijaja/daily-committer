@@ -4,7 +4,7 @@ import type { MetadataRoute } from "next";
  * Web App Manifest（architecture.md 7章）。
  * 色はトークン（docs/design/tokens.json）に合わせる。画面の上端（ステータスバーの下）は白なので
  * theme_color も白にし、layout.tsx の viewport.themeColor と揃える。
- * アイコンはキャラ（ナマケモノ）の頭を黄色地に置いたもの（src/components/mascot-art.tsx の線から書き出し）。
+ * アイコンはキャラ（ナマケモノ）の頭を黄色地に置いたもの（src/components/mascot-art.tsx の線から `pnpm icons` で書き出す）。
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
