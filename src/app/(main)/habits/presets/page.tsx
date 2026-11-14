@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { requireUser } from "@/server/auth";
-import { getHabitList } from "@/server/services/habits";
+import { getActiveHabitNames } from "@/server/services/habits";
 import { PresetsScreen } from "./presets-screen";
 
 /**
@@ -32,7 +32,6 @@ export default function HabitPresetsPage() {
 
 async function PresetsContent() {
   const user = await requireUser();
-  const list = await getHabitList(user.id, "active");
-  const registered = list.groups.flatMap((g) => g.habits.map((h) => h.name));
+  const registered = await getActiveHabitNames(user.id);
   return <PresetsScreen registered={registered} />;
 }

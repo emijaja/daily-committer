@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { requireUser } from "@/server/auth";
-import { getHabitList } from "@/server/services/habits";
+import { getActiveHabitNames } from "@/server/services/habits";
 import { isOnboarded } from "@/server/services/settings";
 import { StartScreen } from "./start-screen";
 
@@ -21,7 +21,6 @@ export default function StartPage() {
 async function StartContent() {
   const user = await requireUser();
   if (await isOnboarded(user.id)) redirect("/record/today");
-  const list = await getHabitList(user.id, "active");
-  const registered = list.groups.flatMap((g) => g.habits.map((h) => h.name));
+  const registered = await getActiveHabitNames(user.id);
   return <StartScreen registered={registered} />;
 }

@@ -44,6 +44,12 @@ export async function getHabitList(
   return { status, counts, groups };
 }
 
+/** 現在の習慣の名前（O5・おすすめから選ぶで「登録済み」を出すため） */
+export async function getActiveHabitNames(userId: UserId): Promise<string[]> {
+  const records = await habitsRepo.listHabits(db, userId, "active");
+  return records.map((h) => h.name);
+}
+
 export async function getHabit(
   userId: UserId,
   habitId: string,
