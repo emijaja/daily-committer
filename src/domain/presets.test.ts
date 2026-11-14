@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { habitNameSchema } from "@/server/validation";
 import {
   HABIT_PRESETS,
   orderPresetSelection,
@@ -8,7 +9,10 @@ import {
 describe("おすすめの習慣", () => {
   it("名前は重複せず、習慣の名前の上限（50文字）に収まる", () => {
     expect(new Set(HABIT_PRESETS).size).toBe(HABIT_PRESETS.length);
-    for (const name of HABIT_PRESETS) expect(name.length).toBeLessThan(50);
+    // 実際の検証（habitNameSchema）にそのままかける。上限を変えてもずれない
+    for (const name of HABIT_PRESETS) {
+      expect(habitNameSchema.safeParse(name).success).toBe(true);
+    }
   });
 
   it("選んだ数の表示", () => {
