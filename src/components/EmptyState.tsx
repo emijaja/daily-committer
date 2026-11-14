@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import type { Expression } from "@/domain/types";
-import { cx, HIT_AREA } from "./cx";
+import { cx } from "./cx";
 import { Mascot } from "./Mascot";
 
 export interface EmptyStateProps {
@@ -61,7 +61,11 @@ export function EmptyState({
 
 /**
  * 空の状態の下線リンク（E1「おすすめから選ぶ」、E3「記録画面へ」）。
- * ボタンの下では 12px あけ、リンクだけのとき（E3）は説明の 12px 下に置く
+ * ボタンの下では 12px あけ、リンクだけのとき（E3）は説明の 12px 下に置く。
+ *
+ * タップ領域はリンク自体に高さ 44px を持たせて確保する。疑似要素で上下に広げると直上のボタンと
+ * 重なるので、上の余白（12px）を負のマージンで打ち消して上の padding に置き換え、
+ * 文字の位置は変えずに、上端を直上の要素に接する位置から下へ 44px にする。
  */
 export function EmptyStateLink({
   className,
@@ -70,8 +74,7 @@ export function EmptyStateLink({
   return (
     <Link
       className={cx(
-        "text-[12px] leading-[14px] font-bold underline underline-offset-4 first:-mt-4",
-        HIT_AREA,
+        "-mt-3 inline-flex min-h-11 min-w-11 justify-center pt-3 text-[12px] leading-[14px] font-bold underline underline-offset-4 first:-mt-7",
         className,
       )}
       {...rest}
