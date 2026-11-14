@@ -1,5 +1,5 @@
-/** ログイン後に戻る先の既定値 */
-export const DEFAULT_AFTER_LOGIN = "/record/today";
+/** ログイン後に戻る先の既定値。入口（/）がオンボーディングの状態で O5 か ①-a かを決める */
+export const DEFAULT_AFTER_LOGIN = "/";
 
 /**
  * ログイン後に戻る先。外部サイトへの移動を防ぐため、同じサイト内のパスだけ許す。

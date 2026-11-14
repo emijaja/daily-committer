@@ -31,7 +31,7 @@ export async function createHabitAction(
   });
 }
 
-/** O5 おすすめから選んだ習慣をまとめて登録する（0件なら何もしない） */
+/** おすすめから選ぶ：選んだ習慣をまとめて登録する（0件なら何もしない）。O5 は startWithPresetsAction */
 export async function createHabitsFromPresetsAction(input: {
   names: string[];
 }): Promise<ActionResult<Habit[]>> {

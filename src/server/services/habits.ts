@@ -44,6 +44,12 @@ export async function getHabitList(
   return { status, counts, groups };
 }
 
+/** 現在の習慣の名前（O5・おすすめから選ぶで「登録済み」を出すため） */
+export async function getActiveHabitNames(userId: UserId): Promise<string[]> {
+  const records = await habitsRepo.listHabits(db, userId, "active");
+  return records.map((h) => h.name);
+}
+
 export async function getHabit(
   userId: UserId,
   habitId: string,
@@ -70,7 +76,12 @@ export async function createHabit(
   });
 }
 
-/** O5：おすすめから選んだ習慣を「毎日・チェックのみ」でまとめて登録する */
+/**
+ * O5・おすすめから選ぶ：選んだ習慣を「毎日・チェックのみ」でまとめて登録する。
+ * 同じ名前の「現在の習慣」がすでにあるものは登録しない（二度押し・戻る操作での重複を防ぐ）。
+ * 過去の習慣に同じ名前があっても、新しい習慣として登録する。
+ * 戻り値は実際に登録した習慣だけ。
+ */
 export async function createHabitsFromPresets(
   userId: UserId,
   names: readonly string[],
@@ -84,11 +95,17 @@ export async function createHabitsFromPresets(
   if (unique.length === 0) return [];
   const createdOn = await getToday(userId, now);
   return db.transaction(async (tx) => {
+    // 同時に送られても（二度押し・2つのタブ）、先の登録が終わってから読むようにする
+    await habitsRepo.lockHabitsOfUser(tx, userId);
+    const active = await habitsRepo.listHabits(tx, userId, "active");
+    const existing = new Set(active.map((h) => h.name));
+    const fresh = unique.filter((name) => !existing.has(name));
+    if (fresh.length === 0) return [];
     const start = await habitsRepo.nextSortOrder(tx, userId);
     const created = await habitsRepo.insertHabits(
       tx,
       userId,
-      unique.map((name, index) => ({
+      fresh.map((name, index) => ({
         name,
         note: null,
         period: "daily" as const,

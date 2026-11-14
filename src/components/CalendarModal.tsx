@@ -11,7 +11,7 @@ import {
   weekdayLabels,
 } from "./calendar-layout";
 import { cx, HIT_AREA } from "./cx";
-import { GRASS_BG } from "./GrassHeatmap";
+import { GRASS_BG } from "./grass-colors";
 import { Icon } from "./icons";
 
 export interface CalendarModalProps {

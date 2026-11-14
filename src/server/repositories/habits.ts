@@ -118,6 +118,20 @@ export async function findHabit(
   return rows[0] ? toHabitRecord(rows[0]) : null;
 }
 
+/**
+ * このユーザーの習慣の追加を、トランザクションの終わりまで1つずつに並べる（advisory lock）。
+ * 「今ある習慣を読んでから追加する」処理を同時に走らせると、どちらも同じ状態を読んで重複して追加するため。
+ * トランザクションの中で呼ぶこと（外で呼ぶとすぐに外れる）。
+ */
+export async function lockHabitsOfUser(
+  exec: Executor,
+  userId: string,
+): Promise<void> {
+  await exec.execute(
+    sql`select pg_advisory_xact_lock(hashtextextended(${`habits:${userId}`}, 0))`,
+  );
+}
+
 /** 次に追加する習慣の並び順（いちばん後ろ） */
 export async function nextSortOrder(
   exec: Executor,
