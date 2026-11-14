@@ -3,11 +3,13 @@
  * 設定・オンボーディング・アカウントの Server Actions（⑦、O4・O5）。
  */
 import { redirect } from "next/navigation";
-import type { Settings } from "@/domain/types";
+import { z } from "zod";
+import type { Habit, Settings } from "@/domain/types";
 import { requireUser } from "@/server/auth";
+import * as habits from "@/server/services/habits";
 import * as settings from "@/server/services/settings";
 import type { ActionResult } from "@/server/services/types";
-import { settingsPatchSchema } from "@/server/validation";
+import { presetNamesSchema, settingsPatchSchema } from "@/server/validation";
 import { revalidateAll } from "./revalidate";
 import { runAction } from "./run";
 
@@ -23,6 +25,34 @@ export async function updateSettingsAction(
     );
     revalidateAll();
     return updated;
+  });
+}
+
+/**
+ * O5 の決定。ブラウザのタイムゾーンを保存してから、選んだおすすめを登録する（0件なら登録しない）。
+ * 作った日・記録の日付をこの端末の暦に合わせるため、タイムゾーンを先に保存する
+ * （ログインの時点では既定値のまま。src/server/auth.ts）。保存できなくても登録は続ける。
+ * 1回の呼び出しにまとめ、再検証も1回にする。
+ */
+export async function startWithPresetsAction(input: {
+  timezone?: string;
+  names: string[];
+}): Promise<ActionResult<Habit[]>> {
+  const user = await requireUser();
+  return runAction(async () => {
+    const { timezone, names } = z
+      .object({ timezone: z.string().optional(), names: presetNamesSchema })
+      .parse(input);
+    if (timezone) {
+      await settings
+        .updateSettings(user.id, { timezone })
+        .catch((error: unknown) =>
+          console.error("タイムゾーンを保存できませんでした", error),
+        );
+    }
+    const created = await habits.createHabitsFromPresets(user.id, names);
+    revalidateAll();
+    return created;
   });
 }
 
