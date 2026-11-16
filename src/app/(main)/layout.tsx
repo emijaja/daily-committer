@@ -15,7 +15,8 @@ export default function MainLayout({ children }: LayoutProps<"/">) {
       <Suspense fallback={null}>
         <OnboardingGate />
       </Suspense>
-      <div className="flex-1">{children}</div>
+      {/* flex にするのは、記録の画面の <main> を下部タブの上まで伸ばすため（スワイプの範囲） */}
+      <div className="flex flex-1 flex-col">{children}</div>
       {/* usePathname は動的なルート（/habits/[id] など）で Suspense の内側に置く必要がある */}
       <Suspense fallback={null}>
         <MainTabBar className="sticky bottom-0" />

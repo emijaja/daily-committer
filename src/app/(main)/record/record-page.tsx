@@ -6,6 +6,7 @@ import { getRecordView } from "@/server/services/record";
 import { getSettings } from "@/server/services/settings";
 import { HelpButton } from "./help-button";
 import { RecordScreen } from "./record-screen";
+import { RecordSwipeArea } from "./record-swipe";
 
 const HEADINGS: Record<Period, { title: string; subtitle: string }> = {
   daily: { title: "Today", subtitle: "今日の習慣を記録" },
@@ -20,7 +21,8 @@ const HEADINGS: Record<Period, { title: string; subtitle: string }> = {
 export function RecordPage({ period }: { period: Period }) {
   const { title, subtitle } = HEADINGS[period];
   return (
-    <main className="pb-8">
+    // flex-1：リストが短くても、下部タブの上まで払えるようにする
+    <RecordSwipeArea period={period} className="flex-1 pb-8">
       <ScreenHeader
         title={title}
         subtitle={subtitle}
@@ -40,7 +42,7 @@ export function RecordPage({ period }: { period: Period }) {
       >
         <RecordContent period={period} />
       </Suspense>
-    </main>
+    </RecordSwipeArea>
   );
 }
 

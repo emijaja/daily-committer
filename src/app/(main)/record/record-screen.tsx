@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import {
   useCallback,
   useMemo,
@@ -18,7 +17,6 @@ import { MascotSpeech } from "@/components/Speech";
 import { SummaryCard } from "@/components/SummaryCard";
 import { Tag } from "@/components/Tag";
 import { Toast } from "@/components/Toast";
-import { useHorizontalSwipe } from "@/components/use-swipe";
 import type { Period } from "@/domain/types";
 import {
   addQuantityAction,
@@ -35,6 +33,7 @@ import type {
 import {
   PERIOD_HREF,
   PERIOD_LABEL,
+  PERIODS,
   quantityOn,
   rowCaption,
   speechMeta,
@@ -50,8 +49,7 @@ import {
   type RecordOp,
 } from "./record-optimistic";
 import { QuantitySheet } from "./quantity-sheet";
-
-const PERIODS: readonly Period[] = ["daily", "weekly", "monthly"];
+import { useBlockRecordSwipe } from "./record-swipe";
 
 interface ToastState {
   /** 続けて出したときにタイマーを数え直すための key */
@@ -75,23 +73,16 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
     () => recompute(view, entries),
     [view, entries],
   );
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const [toast, setToast] = useState<ToastState | null>(null);
   /** 量の記録のシート（⑧-a/b）を開いている習慣 */
   const [sheetHabitId, setSheetHabitId] = useState<string | null>(null);
   const sheetRow = rows.find((r) => r.habit.id === sheetHabitId) ?? null;
   // BottomSheet は onClose が変わるとフォーカスを当て直すので、同じ関数を渡し続ける
   const closeSheet = useCallback(() => setSheetHabitId(null), []);
-  const router = useRouter();
-  // 画面を左右に払うと 今日 ⇄ 今週 ⇄ 今月 を切り替える（端では何もしない）。
-  // シートの中の操作はタッチイベントがここまで伝わるので、開いているあいだは止める
-  const swipe = useHorizontalSwipe({
-    enabled: sheetHabitId === null,
-    onSwipe: (step) => {
-      const next = PERIODS[PERIODS.indexOf(view.period) + step];
-      if (next) router.push(PERIOD_HREF[next]);
-    },
-  });
+  // 左右のスワイプで期間を切り替えると、この画面ごと作り直される。
+  // シートの操作（タッチが親まで伝わる）・取り消しのトースト・保存中の操作（失敗のトースト）を失わないよう、そのあいだは止める
+  useBlockRecordSwipe(sheetHabitId !== null || toast !== null || isPending);
 
   const showToast = (message: string, undo?: () => void) =>
     setToast((prev) => ({ key: (prev?.key ?? 0) + 1, message, undo }));
@@ -298,6 +289,7 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
     <SegmentTabs
       label="記録の期間"
       value={view.period}
+      replace
       items={PERIODS.map((p) => ({
         key: p,
         label: PERIOD_LABEL[p],
@@ -310,17 +302,17 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
   if (summary.total === 0) {
     const noHabits = PERIODS.every((p) => tabSummaries[p].total === 0);
     return (
-      <div {...swipe}>
+      <>
         <div className="px-screen-x mt-3">{tabs}</div>
         <RecordEmpty period={view.period} noHabits={noHabits} />
-      </div>
+      </>
     );
   }
 
   const pending = summary.total - summary.done;
 
   return (
-    <div className="px-screen-x" {...swipe}>
+    <div className="px-screen-x">
       {view.grumble ? (
         <MascotSpeech
           expression={view.grumble.expression}
