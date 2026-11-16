@@ -17,6 +17,8 @@ export interface SegmentTabsProps<K extends string = string> {
   onChange?: (key: K) => void;
   /** 読み上げ用のラベル */
   label?: string;
+  /** href のタブで、履歴を積まずに移動する（タブを切り替えるだけの画面） */
+  replace?: boolean;
   className?: string;
 }
 
@@ -26,6 +28,7 @@ export function SegmentTabs<K extends string>({
   value,
   onChange,
   label,
+  replace,
   className,
 }: SegmentTabsProps<K>) {
   const isLinks = items.every((i) => i.href);
@@ -74,6 +77,7 @@ export function SegmentTabs<K extends string>({
             <Link
               key={item.key}
               href={item.href}
+              replace={replace}
               aria-current={selected ? "page" : undefined}
               className={cls}
             >

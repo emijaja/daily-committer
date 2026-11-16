@@ -33,6 +33,7 @@ import type {
 import {
   PERIOD_HREF,
   PERIOD_LABEL,
+  PERIODS,
   quantityOn,
   rowCaption,
   speechMeta,
@@ -48,8 +49,7 @@ import {
   type RecordOp,
 } from "./record-optimistic";
 import { QuantitySheet } from "./quantity-sheet";
-
-const PERIODS: readonly Period[] = ["daily", "weekly", "monthly"];
+import { useBlockRecordSwipe } from "./record-swipe";
 
 interface ToastState {
   /** 続けて出したときにタイマーを数え直すための key */
@@ -73,13 +73,16 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
     () => recompute(view, entries),
     [view, entries],
   );
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const [toast, setToast] = useState<ToastState | null>(null);
   /** 量の記録のシート（⑧-a/b）を開いている習慣 */
   const [sheetHabitId, setSheetHabitId] = useState<string | null>(null);
   const sheetRow = rows.find((r) => r.habit.id === sheetHabitId) ?? null;
   // BottomSheet は onClose が変わるとフォーカスを当て直すので、同じ関数を渡し続ける
   const closeSheet = useCallback(() => setSheetHabitId(null), []);
+  // 左右のスワイプで期間を切り替えると、この画面ごと作り直される。
+  // シートの操作（タッチが親まで伝わる）・取り消しのトースト・保存中の操作（失敗のトースト）を失わないよう、そのあいだは止める
+  useBlockRecordSwipe(sheetHabitId !== null || toast !== null || isPending);
 
   const showToast = (message: string, undo?: () => void) =>
     setToast((prev) => ({ key: (prev?.key ?? 0) + 1, message, undo }));
@@ -286,6 +289,7 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
     <SegmentTabs
       label="記録の期間"
       value={view.period}
+      replace
       items={PERIODS.map((p) => ({
         key: p,
         label: PERIOD_LABEL[p],

@@ -23,6 +23,9 @@ export const PERIOD_LABEL: Record<Period, string> = {
   monthly: "今月",
 };
 
+/** タブとスワイプの並び順 */
+export const PERIODS: readonly Period[] = ["daily", "weekly", "monthly"];
+
 export const PERIOD_HREF: Record<Period, string> = {
   daily: "/record/today",
   weekly: "/record/week",
