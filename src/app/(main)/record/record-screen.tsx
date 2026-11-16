@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   useCallback,
   useMemo,
@@ -17,6 +18,7 @@ import { MascotSpeech } from "@/components/Speech";
 import { SummaryCard } from "@/components/SummaryCard";
 import { Tag } from "@/components/Tag";
 import { Toast } from "@/components/Toast";
+import { useHorizontalSwipe } from "@/components/use-swipe";
 import type { Period } from "@/domain/types";
 import {
   addQuantityAction,
@@ -80,6 +82,16 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
   const sheetRow = rows.find((r) => r.habit.id === sheetHabitId) ?? null;
   // BottomSheet は onClose が変わるとフォーカスを当て直すので、同じ関数を渡し続ける
   const closeSheet = useCallback(() => setSheetHabitId(null), []);
+  const router = useRouter();
+  // 画面を左右に払うと 今日 ⇄ 今週 ⇄ 今月 を切り替える（端では何もしない）。
+  // シートの中の操作はタッチイベントがここまで伝わるので、開いているあいだは止める
+  const swipe = useHorizontalSwipe({
+    enabled: sheetHabitId === null,
+    onSwipe: (step) => {
+      const next = PERIODS[PERIODS.indexOf(view.period) + step];
+      if (next) router.push(PERIOD_HREF[next]);
+    },
+  });
 
   const showToast = (message: string, undo?: () => void) =>
     setToast((prev) => ({ key: (prev?.key ?? 0) + 1, message, undo }));
@@ -298,17 +310,17 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
   if (summary.total === 0) {
     const noHabits = PERIODS.every((p) => tabSummaries[p].total === 0);
     return (
-      <>
+      <div {...swipe}>
         <div className="px-screen-x mt-3">{tabs}</div>
         <RecordEmpty period={view.period} noHabits={noHabits} />
-      </>
+      </div>
     );
   }
 
   const pending = summary.total - summary.done;
 
   return (
-    <div className="px-screen-x">
+    <div className="px-screen-x" {...swipe}>
       {view.grumble ? (
         <MascotSpeech
           expression={view.grumble.expression}
