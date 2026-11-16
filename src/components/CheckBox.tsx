@@ -3,6 +3,7 @@
 import { useRef, type ButtonHTMLAttributes } from "react";
 import { cx, HIT_AREA } from "./cx";
 import { Icon } from "./icons";
+import { NO_SWIPE_ATTR } from "./use-swipe";
 
 const BOX =
   "inline-flex size-(--size-check) shrink-0 items-center justify-center border-(length:--stroke-box) border-black transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black disabled:opacity-40";
@@ -86,6 +87,8 @@ export function AddButton({
     <button
       type="button"
       aria-label={label}
+      // 長押しのあとに指が横にずれても、画面のスワイプにしない（記録して画面が変わり、取り消しのトーストが消えるため）
+      {...(onLongPress ? { [NO_SWIPE_ATTR]: "" } : {})}
       onPointerDown={() => {
         if (!onLongPress) return;
         longPressed.current = false;
