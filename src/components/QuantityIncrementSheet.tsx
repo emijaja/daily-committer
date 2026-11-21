@@ -39,13 +39,15 @@ export interface QuantityIncrementSheetProps {
   onItemDelete?: (id: string) => void;
   /** 入力欄の見出し（例：今日（金 11/1）の分を追加） */
   addLabel: ReactNode;
+  /** 「前回 N」チップの量（直近の1回分）。押すと入力欄に入る。null なら出さない */
+  previous?: number | null;
   /** 小数点以下の桁数（0 なら整数だけ）。既定 2 */
   decimals?: number;
   /** 「N を追加」を押したとき。amount はこの回の量 */
   onAdd: (amount: number) => void;
 }
 
-/** ⑧-b 量の記録：回ごとに足す。数字キーで1回分を入れて、合計に足す */
+/** ⑧-b 量の記録：回ごとに足す。数字キー（または「前回」チップ）で1回分を入れて、合計に足す */
 export function QuantityIncrementSheet({
   open,
   onClose,
@@ -60,6 +62,7 @@ export function QuantityIncrementSheet({
   onItemPress,
   onItemDelete,
   addLabel,
+  previous = null,
   decimals = 2,
   onAdd,
 }: QuantityIncrementSheetProps) {
@@ -149,7 +152,19 @@ export function QuantityIncrementSheet({
         )}
       </div>
 
-      <p className="mt-4 text-[11px] font-bold">{addLabel}</p>
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <p className="text-[11px] font-bold">{addLabel}</p>
+        {previous !== null ? (
+          <Pill
+            size="sm"
+            variant="secondary"
+            className="h-[26px]! px-2.5! text-[11px]!"
+            onClick={() => setText(formatQuantity(previous))}
+          >
+            前回 {formatQuantity(previous)} {unit}
+          </Pill>
+        ) : null}
+      </div>
       <div
         className="frame-focus mt-2 flex h-[52px] items-center justify-between px-4"
         aria-live="polite"
