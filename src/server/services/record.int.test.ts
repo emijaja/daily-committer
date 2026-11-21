@@ -12,7 +12,7 @@ import {
   addQuantity,
   deleteEntry,
   getRecordView,
-  repeatLastQuantity,
+  saveNote,
   setQuantityTotal,
   toggleCheck,
 } from "./record";
@@ -196,53 +196,59 @@ describe("addQuantity（回ごとに足す）と取り消し", () => {
   });
 });
 
-describe("repeatLastQuantity（＋の長押し）", () => {
-  it("回ごとに足す：前回の1回分と同じ量を追加し、取り消せる", async () => {
+describe("saveNote（□／＋の長押しのひとこと）", () => {
+  const now = new Date("2024-11-01T12:00:00Z");
+
+  it("記録がない日にも書け、書き換え・消去ができる。チェックを外しても消えない", async () => {
     const me = await createUser();
-    const habitId = await createHabit(me, incrementHabit());
-    await addQuantity(me, habitId, d("2024-10-30"), 3);
-    await addQuantity(me, habitId, d("2024-10-31"), 2.5);
+    const habitId = await createHabit(me);
 
-    const result = await repeatLastQuantity(me, habitId, day);
-    expect(result.quantity).toBe(2.5);
-    expect(await entriesOf(habitId)).toHaveLength(3);
-
-    await deleteEntry(me, result.entryId);
-    expect(await entriesOf(habitId)).toHaveLength(2);
-  });
-
-  it("合計を入力：その日の記録がなければ前回の合計で記録する。あれば上書きしない", async () => {
-    const me = await createUser();
-    const habitId = await createHabit(me, totalHabit());
-    await setQuantityTotal(me, habitId, d("2024-10-31"), 25);
-
-    const result = await repeatLastQuantity(me, habitId, day);
-    expect(result.quantity).toBe(25);
-    await expect(repeatLastQuantity(me, habitId, day)).rejects.toThrow(
-      "この日の記録はすでにあります",
+    expect(await saveNote(me, habitId, day, "  二度寝した  ")).toBe(
+      "二度寝した",
     );
-    expect(await entriesOf(habitId)).toHaveLength(2);
+    expect(await entriesOf(habitId)).toEqual([]);
+    let view = await getRecordView(me, "daily", now);
+    expect(view.rows[0]?.note).toBe("二度寝した");
+
+    await toggleCheck(me, habitId, day);
+    await toggleCheck(me, habitId, day);
+    expect(await saveNote(me, habitId, day, "やっぱり読んだ")).toBe(
+      "やっぱり読んだ",
+    );
+    view = await getRecordView(me, "daily", now);
+    expect(view.rows[0]?.note).toBe("やっぱり読んだ");
+
+    expect(await saveNote(me, habitId, day, " ")).toBeNull();
+    view = await getRecordView(me, "daily", now);
+    expect(view.rows[0]?.note).toBeNull();
   });
 
-  it("前回の記録がなければエラー", async () => {
+  it("ほかの日のひとことは出さない", async () => {
     const me = await createUser();
-    const habitId = await createHabit(me, incrementHabit());
-    await expect(repeatLastQuantity(me, habitId, day)).rejects.toThrow(
-      "前回の記録がありません",
+    const habitId = await createHabit(me);
+    await saveNote(me, habitId, d("2024-10-31"), "昨日の分");
+    const view = await getRecordView(me, "daily", now);
+    expect(view.rows[0]?.note).toBeNull();
+  });
+
+  it("140字を超えると拒否する（絵文字も1文字と数える）", async () => {
+    const me = await createUser();
+    const habitId = await createHabit(me);
+    expect(await saveNote(me, habitId, day, "😴".repeat(140))).toHaveLength(
+      280,
+    );
+    await expect(saveNote(me, habitId, day, "あ".repeat(141))).rejects.toThrow(
+      "ひとことは 140 字までです",
     );
   });
 
-  it("他人の習慣・チェックのみの習慣は拒否する", async () => {
+  it("他人の習慣には書けない", async () => {
     const me = await createUser();
     const other = await createUser();
-    const theirs = await createHabit(other, incrementHabit());
-    await addQuantity(other, theirs, day, 1);
-    const check = await createHabit(me, checkHabit());
-    await expect(repeatLastQuantity(me, theirs, day)).rejects.toThrow(
+    const theirs = await createHabit(other);
+    await expect(saveNote(me, theirs, day, "のぞき見")).rejects.toThrow(
       "習慣が見つかりません",
     );
-    await expect(repeatLastQuantity(me, check, day)).rejects.toThrow();
-    expect(await entriesOf(theirs)).toHaveLength(1);
   });
 });
 
@@ -268,6 +274,20 @@ describe("getRecordView", () => {
     await toggleCheck(me, monthly, d("2024-11-02"));
     return { me, reading, workout, running, monthly };
   }
+
+  it("量の行に「前回」チップの量を入れる（合計を入力は今日より前の日、回ごとに足すは直近の1回分）", async () => {
+    const { me, reading, workout, running } = await setup();
+    await setQuantityTotal(me, workout, d("2024-11-03"), 25);
+    const daily = await getRecordView(me, "daily", now);
+    const weekly = await getRecordView(me, "weekly", now);
+    const prev = (
+      rows: { habit: { id: string }; previousQuantity?: number | null }[],
+      id: string,
+    ) => rows.find((r) => r.habit.id === id)?.previousQuantity;
+    expect(prev(daily.rows, reading)).toBeNull();
+    expect(prev(daily.rows, workout)).toBe(25);
+    expect(prev(weekly.rows, running)).toBe(5);
+  });
 
   it("今日・今週・今月の行と集計を、domain の計算で返す", async () => {
     const { me, reading, workout, running } = await setup();

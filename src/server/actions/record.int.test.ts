@@ -23,7 +23,7 @@ const { revalidatePath } = await import("next/cache");
 const {
   addQuantityAction,
   deleteEntryAction,
-  repeatLastQuantityAction,
+  saveNoteAction,
   setQuantityTotalAction,
   toggleCheckAction,
 } = await import("./record");
@@ -98,7 +98,7 @@ describe("記録の Server Actions", () => {
     expect(await addQuantityAction({ habitId: theirs, quantity: 1 })).toEqual(
       notFound,
     );
-    expect(await repeatLastQuantityAction({ habitId: theirs })).toEqual(
+    expect(await saveNoteAction({ habitId: theirs, body: "のぞき見" })).toEqual(
       notFound,
     );
 
@@ -117,17 +117,7 @@ describe("記録の Server Actions", () => {
     const habitId = await createHabit(auth.userId, incrementHabit());
     const added = await addQuantityAction({ habitId, quantity: 2.5 });
     if (!added.ok) throw new Error(added.error);
-    const repeated = await repeatLastQuantityAction({ habitId });
-    expect(repeated).toEqual({
-      ok: true,
-      data: { entryId: expect.any(String), quantity: 2.5 },
-    });
-    expect(await entriesOf(habitId)).toHaveLength(2);
-
-    if (!repeated.ok) throw new Error(repeated.error);
-    expect(await deleteEntryAction({ entryId: repeated.data.entryId })).toEqual(
-      { ok: true, data: undefined },
-    );
+    expect(await entriesOf(habitId)).toHaveLength(1);
     expect(await deleteEntryAction({ entryId: added.data.entryId })).toEqual({
       ok: true,
       data: undefined,
@@ -144,5 +134,22 @@ describe("記録の Server Actions", () => {
     ]);
     await setQuantityTotalAction({ habitId, quantity: 0 });
     expect(await entriesOf(habitId)).toEqual([]);
+  });
+
+  it("ひとことを保存し、空で消す。ひとことの長さが上限を超えるとエラーを返す", async () => {
+    const habitId = await createHabit(auth.userId);
+    expect(await saveNoteAction({ habitId, body: " 二度寝 " })).toEqual({
+      ok: true,
+      data: { note: "二度寝", date: "2024-11-01" },
+    });
+    expect(revalidatePath).toHaveBeenCalled();
+    expect(await saveNoteAction({ habitId, body: "あ".repeat(141) })).toEqual({
+      ok: false,
+      error: "ひとことは 140 字までです",
+    });
+    expect(await saveNoteAction({ habitId, body: "" })).toEqual({
+      ok: true,
+      data: { note: null, date: "2024-11-01" },
+    });
   });
 });

@@ -21,7 +21,6 @@ import type { Period } from "@/domain/types";
 import {
   addQuantityAction,
   deleteEntryAction,
-  repeatLastQuantityAction,
   setQuantityTotalAction,
   toggleCheckAction,
 } from "@/server/actions/record";
@@ -34,7 +33,6 @@ import {
   PERIOD_HREF,
   PERIOD_LABEL,
   PERIODS,
-  quantityOn,
   rowCaption,
   speechMeta,
   summaryLabel,
@@ -50,6 +48,7 @@ import {
 } from "./record-optimistic";
 import { QuantitySheet } from "./quantity-sheet";
 import { useBlockRecordSwipe } from "./record-swipe";
+import { useNoteEditor } from "./use-note-editor";
 
 interface ToastState {
   /** 続けて出したときにタイマーを数え直すための key */
@@ -80,12 +79,24 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
   const sheetRow = rows.find((r) => r.habit.id === sheetHabitId) ?? null;
   // BottomSheet は onClose が変わるとフォーカスを当て直すので、同じ関数を渡し続ける
   const closeSheet = useCallback(() => setSheetHabitId(null), []);
-  // 左右のスワイプで期間を切り替えると、この画面ごと作り直される。
-  // シートの操作（タッチが親まで伝わる）・取り消しのトースト・保存中の操作（失敗のトースト）を失わないよう、そのあいだは止める
-  useBlockRecordSwipe(sheetHabitId !== null || toast !== null || isPending);
 
   const showToast = (message: string, undo?: () => void) =>
     setToast((prev) => ({ key: (prev?.key ?? 0) + 1, message, undo }));
+
+  /** □／＋の長押しで開く、今日のひとこと（⑩-a/b） */
+  const note = useNoteEditor({
+    rows,
+    date: view.today,
+    startTransition,
+    showToast,
+    hideToast: () => setToast(null),
+  });
+
+  // 左右のスワイプで期間を切り替えると、この画面ごと作り直される。
+  // シートの操作（タッチが親まで伝わる）・取り消しのトースト・保存中の操作（失敗のトースト）を失わないよう、そのあいだは止める
+  useBlockRecordSwipe(
+    sheetHabitId !== null || note.isOpen || toast !== null || isPending,
+  );
 
   /**
    * 楽観的に op を当ててから Server Action を呼ぶ。失敗したら（transition が終わると）元に戻り、
@@ -125,34 +136,6 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
           },
         );
       },
-    );
-  }
-
-  /**
-   * ＋の長押し：前回と同じ量ですぐに記録し、取り消しのトーストを出す。
-   * 「合計を入力」で今日の記録がすでにあるときは、上書きせずにシートを開く
-   * （取り消しで元の合計を消してしまわないため。service の repeatLastQuantity と同じ考え）
-   */
-  function repeatLast(row: RecordRow) {
-    const { habit } = row;
-    if (
-      habit.inputMode === "total" &&
-      quantityOn(row.entries ?? [], view.today) > 0
-    ) {
-      setSheetHabitId(habit.id);
-      return;
-    }
-    mutate(
-      null,
-      () => repeatLastQuantityAction({ habitId: habit.id, date: view.today }),
-      ({ entryId, quantity }) =>
-        showToast(
-          `${habit.name} ${formatQuantity(quantity)} ${habit.unit ?? ""}を記録しました`,
-          () => {
-            setToast(null);
-            deleteEntry(entryId);
-          },
-        ),
     );
   }
 
@@ -214,6 +197,8 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
   function rowProps(row: RecordRow): HabitRowProps {
     const { habit, progress } = row;
     const caption = rowCaption(habit, progress, row.streak);
+    const hasNote = note.notes[habit.id] != null;
+    const openNote = () => note.open(row);
     const week =
       habit.period === "weekly"
         ? {
@@ -227,10 +212,12 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
         return {
           name: habit.name,
           caption,
+          hasNote,
           control: {
             type: "check",
             checked: progress.achieved,
             onChange: () => toggleToday(row, false),
+            onLongPress: openNote,
           },
         };
       }
@@ -238,6 +225,7 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
       return {
         name: habit.name,
         caption,
+        hasNote,
         amount: { value: progress.current, target, unit: "回" },
         progress: target > 1 && !week ? progress.current / target : undefined,
         week,
@@ -247,11 +235,13 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
                 type: "add",
                 done: progress.achieved,
                 onPress: () => toggleToday(row, true),
+                onLongPress: openNote,
               }
             : {
                 type: "check",
                 checked: progress.achieved,
                 onChange: () => toggleToday(row, true),
+                onLongPress: openNote,
               },
       };
     }
@@ -275,12 +265,13 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
             : 1
           : undefined,
       week,
+      hasNote,
       onPress: () => setSheetHabitId(habit.id),
       control: {
         type: "add",
         done: progress.achieved,
         onPress: () => setSheetHabitId(habit.id),
-        onLongPress: () => repeatLast(row),
+        onLongPress: openNote,
       },
     };
   }
@@ -351,6 +342,7 @@ export function RecordScreen({ view, clock }: RecordScreenProps) {
         onAdd={addOnce}
         onDelete={deleteOnce}
       />
+      {note.sheet}
       <Toast
         key={toast?.key}
         open={toast !== null}
