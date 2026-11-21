@@ -9,7 +9,7 @@ import {
   totalHabit,
 } from "@/server/testing/factories";
 import { archiveHabit } from "./habits";
-import { addQuantity, setQuantityTotal, toggleCheck } from "./record";
+import { addQuantity, saveNote, setQuantityTotal, toggleCheck } from "./record";
 import { getDayEditView, getReviewView } from "./review";
 import { updateSettings } from "./settings";
 
@@ -205,6 +205,27 @@ describe("getReviewView", () => {
 });
 
 describe("getDayEditView", () => {
+  it("選んだ日のひとことと、その日から見た「前回」の量を行に入れる", async () => {
+    const me = await createUser();
+    const reading = await createHabit(me, checkHabit({ name: "読書" }), {
+      sortOrder: 0,
+    });
+    const workout = await createHabit(me, totalHabit({ name: "筋トレ" }), {
+      sortOrder: 1,
+    });
+    await saveNote(me, reading, d("2024-10-29"), "未記録でも書ける");
+    await saveNote(me, reading, d("2024-10-30"), "別の日");
+    await setQuantityTotal(me, workout, d("2024-10-28"), 20);
+    await setQuantityTotal(me, workout, d("2024-10-31"), 40);
+
+    const view = await getDayEditView(me, d("2024-10-29"), now);
+    const row = (id: string) => view.daily.find((r) => r.habit.id === id);
+    expect(row(reading)?.note).toBe("未記録でも書ける");
+    expect(row(workout)?.note).toBeNull();
+    // 選んだ日より後の記録（10/31）は前回にしない
+    expect(row(workout)?.previousQuantity).toBe(20);
+  });
+
   it("その日の日次と、その日を含む週・月の習慣の行を、並び順に返す", async () => {
     const me = await createUser();
     const reading = await createHabit(me, checkHabit({ name: "読書" }), {

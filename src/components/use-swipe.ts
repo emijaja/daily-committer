@@ -8,7 +8,7 @@ export const SWIPE_MIN_DISTANCE = 50;
 export const SWIPE_EDGE = 24;
 /**
  * この属性のついた要素の中で始めた指は無視する。
- * 長押しのある＋（長押しのあいだに指が横にずれやすい）につける
+ * 長押しのある□／＋（長押しのあいだに指が横にずれやすい）につける
  */
 export const NO_SWIPE_ATTR = "data-no-swipe";
 

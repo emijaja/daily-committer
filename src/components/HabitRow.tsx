@@ -1,21 +1,25 @@
 import type { ReactNode } from "react";
 import { AddButton, CheckBox } from "./CheckBox";
 import { cx } from "./cx";
+import { Icon } from "./icons";
 import { ProgressBar } from "./ProgressBar";
 import { WeekDots, type WeekDay } from "./WeekDots";
 
-/** 右端のボタン。check＝□（押すと完了／取り消し）、add＝＋（達成後は黒塗りのチェック） */
+/**
+ * 右端のボタン。check＝□（押すと完了／取り消し）、add＝＋（達成後は黒塗りのチェック）。
+ * onLongPress は長押し（ひとことを書く）
+ */
 export type HabitRowControl =
   | {
       type: "check";
       checked: boolean;
       onChange?: (next: boolean) => void;
+      onLongPress?: () => void;
     }
   | {
       type: "add";
       done: boolean;
       onPress?: () => void;
-      /** 長押しで前回と同じ量を即記録 */
       onLongPress?: () => void;
     };
 
@@ -32,6 +36,8 @@ export interface HabitRowProps {
   week?: { days: readonly WeekDay[]; onDayPress?: (index: number) => void };
   /** 「次に押す所」として右のボタンを黄色にする（オンボーディング O2） */
   highlight?: boolean;
+  /** ひとことがある日なら true。補足の横に印だけを出す（本文は出さない） */
+  hasNote?: boolean;
   /** 行（名前のあたり）を押したとき。量の入力シートを開くなど */
   onPress?: () => void;
   className?: string;
@@ -46,17 +52,30 @@ export function HabitRow({
   progress,
   week,
   highlight,
+  hasNote,
   onPress,
   className,
 }: HabitRowProps) {
+  const noteMark = hasNote ? (
+    <span className="shrink-0 text-black">
+      <Icon name="note" size={12} />
+      <span className="sr-only">（ひとことあり）</span>
+    </span>
+  ) : null;
   const text = (
     <>
-      <span className="text-row-title block truncate leading-[17px]">
-        {name}
+      <span className="flex items-center gap-1.5">
+        <span className="text-row-title block min-w-0 truncate leading-[17px]">
+          {name}
+        </span>
+        {caption ? null : noteMark}
       </span>
       {caption ? (
-        <span className="text-caption mt-0.5 block truncate leading-3 text-gray-500">
-          {caption}
+        <span className="mt-0.5 flex items-center gap-1.5">
+          <span className="text-caption block min-w-0 truncate leading-3 text-gray-500">
+            {caption}
+          </span>
+          {noteMark}
         </span>
       ) : null}
     </>
@@ -93,6 +112,7 @@ export function HabitRow({
             label={name}
             checked={control.checked}
             onChange={control.onChange}
+            onLongPress={control.onLongPress}
             highlight={highlight}
           />
         ) : (

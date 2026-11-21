@@ -7,17 +7,7 @@
  * 記録の持ち主と習慣の持ち主の一致は、複合外部キー entries_habit_fk が守る。
  */
 import "server-only";
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  gte,
-  inArray,
-  isNotNull,
-  lte,
-  sql,
-} from "drizzle-orm";
+import { and, asc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { entries } from "@/db/schema";
 import type { DateRange, Entry, LogicalDate } from "@/domain/types";
 import type { HabitRecord } from "./habits";
@@ -157,28 +147,6 @@ export async function existsOnDate(
     )
     .limit(1);
   return rows.length > 0;
-}
-
-/** その習慣の、いちばん新しい（日付が新しく、同じ日なら後に作った）量の記録の量 */
-export async function findLatestQuantity(
-  exec: Executor,
-  userId: string,
-  habitId: string,
-): Promise<number | null> {
-  if (!isUuid(habitId)) return null;
-  const [row] = await exec
-    .select({ quantity: entries.quantity })
-    .from(entries)
-    .where(
-      and(
-        eq(entries.userId, userId),
-        eq(entries.habitId, habitId),
-        isNotNull(entries.quantity),
-      ),
-    )
-    .orderBy(desc(entries.date), desc(entries.createdAt), desc(entries.id))
-    .limit(1);
-  return row?.quantity ?? null;
 }
 
 /**

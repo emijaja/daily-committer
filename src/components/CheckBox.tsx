@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, type ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes } from "react";
 import { cx, HIT_AREA } from "./cx";
 import { Icon } from "./icons";
+import { useLongPress } from "./use-long-press";
 import { NO_SWIPE_ATTR } from "./use-swipe";
 
 const BOX =
@@ -18,6 +19,13 @@ export interface CheckBoxProps extends Omit<
   label: string;
   /** 「次に押す所」の印として黄色にする（オンボーディング O2） */
   highlight?: boolean;
+  /** 長押し（ひとことを書く）。右クリック・メニューキーでも呼ぶ。指定しないと長押しは普通の押下と同じ */
+  onLongPress?: () => void;
+}
+
+/** 長押しのあるボタンにつける属性。指が横にずれても画面のスワイプにせず、長押しで文字を選ばない */
+function longPressProps(onLongPress: (() => void) | undefined) {
+  return onLongPress ? { [NO_SWIPE_ATTR]: "" } : {};
 }
 
 /** チェック：30×30 の四角・黒枠 1.5px。完了＝黒塗り＋白のチェック */
@@ -26,19 +34,26 @@ export function CheckBox({
   onChange,
   label,
   highlight,
+  onLongPress,
   className,
   ...rest
 }: CheckBoxProps) {
+  const press = useLongPress({
+    onPress: () => onChange?.(!checked),
+    onLongPress,
+  });
   return (
     <button
       type="button"
       role="checkbox"
       aria-checked={checked}
       aria-label={label}
-      onClick={() => onChange?.(!checked)}
+      {...longPressProps(onLongPress)}
+      {...press}
       className={cx(
         BOX,
         HIT_AREA,
+        onLongPress && "touch-manipulation select-none",
         checked ? "bg-black text-white" : highlight ? "bg-yellow" : "bg-white",
         className,
       )}
@@ -58,12 +73,10 @@ export interface AddButtonProps extends Omit<
   /** 目標に届いたら黒塗りのチェックで表示する（押すとシートで追加・修正） */
   done?: boolean;
   onPress?: () => void;
-  /** 長押し（前回と同じ量で即記録）。指定しないと長押しは普通の押下と同じ */
+  /** 長押し（ひとことを書く）。右クリック・メニューキーでも呼ぶ。指定しないと長押しは普通の押下と同じ */
   onLongPress?: () => void;
   highlight?: boolean;
 }
-
-const LONG_PRESS_MS = 500;
 
 /** 量の習慣の「＋」。達成後は黒塗りのチェックになる */
 export function AddButton({
@@ -75,42 +88,14 @@ export function AddButton({
   className,
   ...rest
 }: AddButtonProps) {
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const longPressed = useRef(false);
-
-  const clear = () => {
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = null;
-  };
-
+  const press = useLongPress({ onPress, onLongPress });
   return (
     <button
       type="button"
       aria-label={label}
-      // 長押しのあとに指が横にずれても、画面のスワイプにしない（記録して画面が変わり、取り消しのトーストが消えるため）
-      {...(onLongPress ? { [NO_SWIPE_ATTR]: "" } : {})}
-      onPointerDown={() => {
-        if (!onLongPress) return;
-        longPressed.current = false;
-        clear();
-        timer.current = setTimeout(() => {
-          longPressed.current = true;
-          onLongPress();
-        }, LONG_PRESS_MS);
-      }}
-      onPointerUp={clear}
-      onPointerLeave={clear}
-      onPointerCancel={clear}
-      onContextMenu={(e) => {
-        if (onLongPress) e.preventDefault();
-      }}
-      onClick={() => {
-        if (longPressed.current) {
-          longPressed.current = false;
-          return;
-        }
-        onPress?.();
-      }}
+      // 長押しのあとに指が横にずれても、画面のスワイプにしない（シートが開いて画面が変わるため）
+      {...longPressProps(onLongPress)}
+      {...press}
       className={cx(
         BOX,
         HIT_AREA,

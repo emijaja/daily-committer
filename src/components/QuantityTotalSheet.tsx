@@ -25,6 +25,8 @@ export interface QuantityTotalSheetProps {
   initialValue: number;
   /** チップで足す量（既定 +1 / +5 / +10） */
   steps?: readonly number[];
+  /** 「前回 N」チップの量（前回の合計）。null なら出さない */
+  previous?: number | null;
   /** 「N 回で記録する」を押したとき。value は合計 */
   onSubmit: (value: number) => void;
 }
@@ -32,6 +34,7 @@ export interface QuantityTotalSheetProps {
 /**
  * ⑧-a 量の記録：合計を入力。
  * −／＋・チップ・直接入力で合計を決めて記録する。開くたびに入力は initialValue に戻る。
+ * 「前回 N」チップは前回の合計を入れる（＋の長押しの即記録の代わり）。
  */
 export function QuantityTotalSheet({
   open,
@@ -43,6 +46,7 @@ export function QuantityTotalSheet({
   target,
   initialValue,
   steps = [1, 5, 10],
+  previous = null,
   onSubmit,
 }: QuantityTotalSheetProps) {
   const [text, setText] = useState(() => formatQuantity(initialValue));
@@ -141,14 +145,24 @@ export function QuantityTotalSheet({
             key={s}
             size="md"
             variant="secondary"
-            className="px-4"
+            className="px-3.5!"
             onClick={() => set(value + s)}
           >
             +{formatQuantity(s)}
           </Pill>
         ))}
+        {previous !== null ? (
+          <Pill
+            size="md"
+            variant="secondary"
+            className="px-3.5!"
+            onClick={() => set(previous)}
+          >
+            前回 {formatQuantity(previous)}
+          </Pill>
+        ) : null}
         {target !== null ? (
-          <Pill size="md" className="px-4" onClick={() => set(target)}>
+          <Pill size="md" className="px-3.5!" onClick={() => set(target)}>
             目標の {formatQuantity(target)}
           </Pill>
         ) : null}

@@ -15,6 +15,7 @@ import {
   toLogicalDate,
 } from "@/domain/date";
 import { selectGrumble } from "@/domain/grumble";
+import { normalizeNote, previousQuantity } from "@/domain/note";
 import { currentStreak } from "@/domain/streak";
 import type {
   DateRange,
@@ -25,9 +26,14 @@ import type {
   WeekStart,
 } from "@/domain/types";
 import * as entriesRepo from "@/server/repositories/entries";
+import * as notesRepo from "@/server/repositories/entry-notes";
 import * as habitsRepo from "@/server/repositories/habits";
 import { toHabit, type HabitRecord } from "@/server/repositories/habits";
-import { quantitySchema, quantityTotalSchema } from "@/server/validation";
+import {
+  noteBodySchema,
+  quantitySchema,
+  quantityTotalSchema,
+} from "@/server/validation";
 import { hourIn } from "./clock";
 import { entryNotFound, habitNotFound, ServiceError } from "./errors";
 import { getSettings } from "./settings";
@@ -52,9 +58,11 @@ export async function getRecordView(
   );
   // 連続記録の計算に過去の記録も要るので、現在の習慣の記録をすべて取得する
   // （習慣10個×数年でも数万行。architecture.md 4章「読み込みの量」）
-  const entries = await entriesRepo.listEntries(db, userId, {
-    habitIds: habits.map((h) => h.id),
-  });
+  const habitIds = habits.map((h) => h.id);
+  const [entries, notes] = await Promise.all([
+    entriesRepo.listEntries(db, userId, { habitIds }),
+    notesRepo.listNotesOnDate(db, userId, habitIds, today),
+  ]);
   const byHabit = groupByHabit(entries);
 
   const rowsByPeriod = Object.fromEntries(
@@ -69,6 +77,8 @@ export async function getRecordView(
             progress: evaluatePeriod(habit, all, ranges[p]),
             entries: all.filter((e) => isInRange(e.date, ranges[p])),
             streak: streakOf(habit, all, today, settings.weekStart),
+            note: notes.get(habit.id) ?? null,
+            previousQuantity: previousQuantity(habit, all, today),
           };
         }),
     ]),
@@ -224,42 +234,30 @@ export async function addQuantity(
 }
 
 /**
- * ＋の長押し：前回と同じ量で記録する。取り消し用に記録の ID を返す。
- * - 回ごとに足す：前回の1回分と同じ量を1行追加する
- * - 合計を入力：その日の記録がまだないときだけ、前回の合計と同じ量で記録する。
- *   すでにあるときは上書きせずエラーにする（取り消しで元の合計を消してしまわないため）
+ * 記録へのひとことを保存する（□／＋の長押しのシート）。記録がない日にも書ける。
+ * 空（空白だけ）なら消す。保存した本文（消したら null）を返す
  */
-export async function repeatLastQuantity(
+export async function saveNote(
   userId: UserId,
   habitId: string,
   date: LogicalDate,
-): Promise<{ entryId: string; quantity: number }> {
-  const habit = await findHabitFor(userId, habitId, "quantity");
-  const quantity = await entriesRepo.findLatestQuantity(db, userId, habitId);
-  if (quantity === null || quantity <= 0) {
-    throw new ServiceError("invalid", "前回の記録がありません");
-  }
-  if (habit.multiplePerDay) {
-    const entryId = await entriesRepo.insertEntry(
-      db,
-      userId,
-      habit,
-      date,
-      quantity,
+  body: string,
+): Promise<string | null> {
+  const parsed = noteBodySchema.safeParse(body);
+  if (!parsed.success) {
+    throw new ServiceError(
+      "invalid",
+      parsed.error.issues[0]?.message ?? "ひとことが正しくありません",
     );
-    return { entryId, quantity };
   }
-  const entryId = await entriesRepo.insertSingleIfAbsent(
-    db,
-    userId,
-    habit,
-    date,
-    quantity,
-  );
-  if (!entryId) {
-    throw new ServiceError("conflict", "この日の記録はすでにあります");
+  await findHabitFor(userId, habitId, "any");
+  const note = normalizeNote(parsed.data);
+  if (note === null) {
+    await notesRepo.deleteNote(db, userId, habitId, date);
+    return null;
   }
-  return { entryId, quantity };
+  await notesRepo.upsertNote(db, userId, habitId, date, note);
+  return note;
 }
 
 /** 記録を1件削除する（取り消し、⑧-b の明細の削除） */
@@ -273,7 +271,7 @@ export async function deleteEntry(
 
 // ── 内部 ─────────────────────────────
 
-type HabitKind = "check" | "quantity" | "total" | "increment";
+type HabitKind = "any" | "check" | "total" | "increment";
 
 /** 自分の習慣を取得し、操作に合った種類かを確かめる */
 async function findHabitFor(
@@ -284,11 +282,10 @@ async function findHabitFor(
   const habit = await habitsRepo.findHabit(db, userId, habitId);
   if (!habit) throw habitNotFound();
   const ok =
-    kind === "check"
+    kind === "any" ||
+    (kind === "check"
       ? habit.recordType === "check"
-      : kind === "quantity"
-        ? habit.recordType === "quantity"
-        : habit.recordType === "quantity" && habit.inputMode === kind;
+      : habit.recordType === "quantity" && habit.inputMode === kind);
   if (!ok) {
     throw new ServiceError("invalid", "この習慣では使えない記録のしかたです");
   }
