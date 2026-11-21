@@ -92,6 +92,8 @@ export const habits = pgTable(
       t.userId,
       t.multiplePerDay,
     ),
+    // entry_notes からの複合外部キーの参照先
+    unique("habits_id_user_unique").on(t.id, t.userId),
     check(
       "quantity_fields",
       sql`(${t.recordType} = 'check' and ${t.unit} is null and ${t.quantityTarget} is null and ${t.inputMode} is null)
@@ -137,6 +139,36 @@ export const entries = pgTable(
       .where(sql`not ${t.multiplePerDay}`),
     index("entries_user_date_idx").on(t.userId, t.date),
     index("entries_habit_date_idx").on(t.habitId, t.date),
+  ],
+);
+
+/**
+ * 記録へのひとこと（docs/web/domain-spec.md 2章）。習慣・日ごとに1つ。
+ * 記録（entries）とは別に持つので、記録がない日にも書け、チェックを外しても消えない。
+ */
+export const entryNotes = pgTable(
+  "entry_notes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    habitId: uuid("habit_id").notNull(),
+    userId: userId(),
+    date: date("date", { mode: "string" }).notNull(),
+    body: text("body").notNull(),
+    createdAt: createdAt(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // ひとことの user_id と習慣の持ち主が必ず一致するようにする（習慣を消すと一緒に消える）
+    foreignKey({
+      name: "entry_notes_habit_fk",
+      columns: [t.habitId, t.userId],
+      foreignColumns: [habits.id, habits.userId],
+    }).onDelete("cascade"),
+    unique("entry_notes_habit_date_unique").on(t.habitId, t.date),
+    index("entry_notes_user_date_idx").on(t.userId, t.date),
+    check("entry_notes_body_not_empty", sql`length(${t.body}) > 0`),
   ],
 );
 
