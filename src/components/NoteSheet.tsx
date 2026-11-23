@@ -77,9 +77,7 @@ export function NoteSheet({
         className="frame-focus block min-h-[120px] w-full resize-none bg-white p-3.5 text-[14px] leading-[1.65] font-medium outline-none placeholder:text-gray-300"
       />
       <div className="mt-2 flex items-center justify-between gap-3 text-gray-500">
-        <span className="text-[10px] font-medium">
-          この日・この習慣に1つ
-        </span>
+        <span className="text-[10px] font-medium">この日・この習慣に1つ</span>
         <span className="text-[11px] font-bold">
           <span className="font-latin">{length}</span>字
         </span>
@@ -92,11 +90,7 @@ export function NoteSheet({
         >
           {initialBody !== null ? "削除" : "やめる"}
         </button>
-        <Pill
-          block={false}
-          className="flex-1"
-          onClick={() => onSave(body)}
-        >
+        <Pill block={false} className="flex-1" onClick={() => onSave(body)}>
           保存する
         </Pill>
       </div>

@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { d, makeEntry, makeHabit } from "./fixtures";
-import {
-  normalizeNote,
-  noteLength,
-  previousQuantity,
-} from "./note";
+import { normalizeNote, noteLength, previousQuantity } from "./note";
 
 describe("noteLength", () => {
   it("日本語も絵文字も1文字と数える", () => {
