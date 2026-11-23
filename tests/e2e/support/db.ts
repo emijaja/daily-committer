@@ -11,6 +11,9 @@ import * as schema from "../../../src/db/schema";
 import {
   entries,
   habits,
+  memoCategories,
+  memoDrafts,
+  memos,
   session,
   user,
   userSettings,
@@ -178,4 +181,68 @@ export async function settingsOf(userId: string) {
     .from(userSettings)
     .where(eq(userSettings.userId, userId));
   return row;
+}
+
+/** メモのカテゴリを作る（並び順は渡した順）。作ったカテゴリの ID */
+export async function createMemoCategories(
+  userId: string,
+  values: readonly {
+    name: string;
+    prompt?: string | null;
+    dailyTarget?: number | null;
+  }[],
+): Promise<string[]> {
+  const rows = await db()
+    .insert(memoCategories)
+    .values(
+      values.map((v, i) => ({
+        userId,
+        name: v.name,
+        prompt: v.prompt ?? null,
+        dailyTarget: v.dailyTarget ?? null,
+        sortOrder: i,
+      })),
+    )
+    .returning({ id: memoCategories.id });
+  return rows.map((r) => r.id);
+}
+
+/** メモを作る */
+export async function createMemo(
+  userId: string,
+  input: { date: LogicalDate; body: string; categoryId?: string | null },
+): Promise<string> {
+  const [row] = await db()
+    .insert(memos)
+    .values({
+      userId,
+      date: input.date,
+      body: input.body,
+      categoryId: input.categoryId ?? null,
+    })
+    .returning({ id: memos.id });
+  if (!row) throw new Error("メモを作れませんでした");
+  return row.id;
+}
+
+/** そのユーザーのメモ（日付の古い順） */
+export async function memosOf(userId: string) {
+  return db()
+    .select({
+      date: memos.date,
+      body: memos.body,
+      categoryId: memos.categoryId,
+      habitId: memos.habitId,
+    })
+    .from(memos)
+    .where(eq(memos.userId, userId))
+    .orderBy(memos.date, memos.createdAt);
+}
+
+export async function draftOf(userId: string) {
+  const [row] = await db()
+    .select({ date: memoDrafts.date, body: memoDrafts.body })
+    .from(memoDrafts)
+    .where(eq(memoDrafts.userId, userId));
+  return row ?? null;
 }
