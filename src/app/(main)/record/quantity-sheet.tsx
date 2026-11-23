@@ -81,6 +81,7 @@ export function QuantitySheet({
         addLabel={
           addLabel ?? `今日（${dowLabel(today)} ${shortDate(today)}）の分を追加`
         }
+        previous={row.previousQuantity ?? null}
         onAdd={(amount) => onAdd(row, amount)}
       />
     );
@@ -109,6 +110,7 @@ export function QuantitySheet({
       unit={unit}
       target={daily ? (habit?.quantityTarget ?? null) : null}
       initialValue={todayValue}
+      previous={row?.previousQuantity ?? null}
       onSubmit={(value) => {
         if (row && value !== todayValue) onSetTotal(row, value);
         onClose();

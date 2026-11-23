@@ -23,7 +23,6 @@ import type { LogicalDate } from "@/domain/types";
 import {
   addQuantityAction,
   deleteEntryAction,
-  repeatLastQuantityAction,
   setQuantityTotalAction,
   toggleCheckAction,
 } from "@/server/actions/record";
@@ -33,18 +32,14 @@ import type {
   RecordRow,
 } from "@/server/services/types";
 import { QuantitySheet } from "../../record/quantity-sheet";
-import {
-  dowLabel,
-  jaDate,
-  quantityOn,
-  shortDate,
-} from "../../record/record-format";
+import { dowLabel, jaDate, shortDate } from "../../record/record-format";
 import {
   applyRecordOp,
   entriesByHabit,
   type EntriesByHabit,
   type RecordOp,
 } from "../../record/record-optimistic";
+import { useNoteEditor } from "../../record/use-note-editor";
 import {
   dayEditCaption,
   dayEditWeekDays,
@@ -147,6 +142,19 @@ export function DayEditScreen({ view }: { view: DayEditView }) {
   const showToast = (message: string, undo?: () => void) =>
     setToast((prev) => ({ key: (prev?.key ?? 0) + 1, message, undo }));
 
+  /** □／＋の長押しで開く、選んだ日のひとこと（⑩-a/b） */
+  const noteRows = useMemo(
+    () => [...daily, ...weekly, ...monthly],
+    [daily, weekly, monthly],
+  );
+  const note = useNoteEditor({
+    rows: noteRows,
+    date,
+    startTransition,
+    showToast,
+    hideToast: () => setToast(null),
+  });
+
   function mutate<T>(
     op: RecordOp | null,
     call: () => Promise<ActionResult<T>>,
@@ -186,27 +194,6 @@ export function DayEditScreen({ view }: { view: DayEditView }) {
 
   const quantityToast = (row: RecordRow, quantity: number, verb: string) =>
     `${row.habit.name} ${formatQuantity(quantity)} ${row.habit.unit ?? ""}${verb}`;
-
-  /** ＋の長押し：前回と同じ量で選んだ日に記録する（① と同じ。合計がもうあればシートを開く） */
-  function repeatLast(row: RecordRow) {
-    const { habit } = row;
-    if (
-      habit.inputMode === "total" &&
-      quantityOn(row.entries ?? [], date) > 0
-    ) {
-      setSheet({ habitId: habit.id, date });
-      return;
-    }
-    mutate(
-      null,
-      () => repeatLastQuantityAction({ habitId: habit.id, date }),
-      ({ entryId, quantity }) =>
-        showToast(quantityToast(row, quantity, "を記録しました"), () => {
-          setToast(null);
-          deleteEntry(entryId);
-        }),
-    );
-  }
 
   function setTotal(row: RecordRow, quantity: number) {
     if (!sheet) return;
@@ -255,6 +242,8 @@ export function DayEditScreen({ view }: { view: DayEditView }) {
     const { habit, progress } = row;
     const caption = dayEditCaption(habit, progress);
     const isQuantity = habit.recordType === "quantity";
+    const hasNote = note.notes[habit.id] != null;
+    const openNote = () => note.open(row);
     const openSheet = (day: LogicalDate) =>
       setSheet({ habitId: habit.id, date: day });
     const week =
@@ -281,16 +270,19 @@ export function DayEditScreen({ view }: { view: DayEditView }) {
         return {
           name: habit.name,
           caption,
+          hasNote,
           control: {
             type: "check",
             checked: progress.achieved,
             onChange: () => toggle(row, date, false),
+            onLongPress: openNote,
           },
         };
       }
       return {
         name: habit.name,
         caption,
+        hasNote,
         amount: { value: progress.current, target, unit: "回" },
         progress: target > 1 && !week ? progress.current / target : undefined,
         week,
@@ -300,11 +292,13 @@ export function DayEditScreen({ view }: { view: DayEditView }) {
                 type: "add",
                 done: progress.achieved,
                 onPress: () => toggle(row, date, true),
+                onLongPress: openNote,
               }
             : {
                 type: "check",
                 checked: progress.achieved,
                 onChange: () => toggle(row, date, true),
+                onLongPress: openNote,
               },
       };
     }
@@ -329,12 +323,13 @@ export function DayEditScreen({ view }: { view: DayEditView }) {
             : 1
           : undefined,
       week,
+      hasNote,
       onPress: () => openSheet(date),
       control: {
         type: "add",
         done: progress.achieved,
         onPress: () => openSheet(date),
-        onLongPress: () => repeatLast(row),
+        onLongPress: openNote,
       },
     };
   }
@@ -461,6 +456,7 @@ export function DayEditScreen({ view }: { view: DayEditView }) {
         onAdd={addOnce}
         onDelete={deleteOnce}
       />
+      {note.sheet}
       <Toast
         key={toast?.key}
         open={toast !== null}

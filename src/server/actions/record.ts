@@ -1,6 +1,6 @@
 "use server";
 /**
- * 記録の Server Actions（①②⑧から呼ぶ）。
+ * 記録とひとことの Server Actions（①②⑧⑩から呼ぶ）。
  * - ログインの確認は requireUser()（ログインしていなければログイン画面へ移動）
  * - 入力は zod で検証し、習慣・記録は必ずログイン中のユーザーのものに絞る（service）
  * - date を省くとサーバーで決めた今日に記録する。未来の日付は拒否する
@@ -74,18 +74,21 @@ export async function addQuantityAction(input: {
   });
 }
 
-/** ＋の長押し：前回と同じ量で記録する。取り消し用に記録の ID と量を返す */
-export async function repeatLastQuantityAction(input: {
+/** □／＋の長押しのシート：ひとことを保存する（空なら消す）。保存した本文（消したら null）を返す */
+export async function saveNoteAction(input: {
   habitId: string;
   date?: string;
-}): Promise<ActionResult<{ entryId: string; quantity: number }>> {
+  body: string;
+}): Promise<ActionResult<{ note: string | null; date: string }>> {
   const user = await requireUser();
   return runAction(async () => {
-    const { habitId, date } = habitDateSchema.parse(input);
+    const { habitId, date, body } = habitDateSchema
+      .extend({ body: z.string() })
+      .parse(input);
     const day = await resolveRecordDate(user.id, date);
-    const result = await record.repeatLastQuantity(user.id, habitId, day);
+    const note = await record.saveNote(user.id, habitId, day, body);
     revalidateRecords();
-    return result;
+    return { note, date: day };
   });
 }
 

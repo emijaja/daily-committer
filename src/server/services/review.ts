@@ -15,6 +15,7 @@ import {
 } from "@/domain/date";
 import { allHabitsGrass, countRecords, habitGrass } from "@/domain/grass";
 import { isActiveOn } from "@/domain/habit";
+import { previousQuantity } from "@/domain/note";
 import {
   buildHabitStats,
   habitDetailGrassRange,
@@ -33,6 +34,7 @@ import type {
   Settings,
 } from "@/domain/types";
 import * as entriesRepo from "@/server/repositories/entries";
+import * as notesRepo from "@/server/repositories/memos";
 import * as habitsRepo from "@/server/repositories/habits";
 import { toHabit } from "@/server/repositories/habits";
 import { todayFor } from "./clock";
@@ -213,6 +215,12 @@ export async function getDayEditView(
   const startDate = earliestCreatedOn(habits);
   const active = habits.filter((h) => isActiveOn(h, date));
   const byHabit = Map.groupBy(entries, (e) => e.habitId);
+  const notes = await notesRepo.listNotesOnDate(
+    db,
+    userId,
+    active.map((h) => h.id),
+    date,
+  );
   const rowsOf = (period: Period, range: DateRange): RecordRow[] =>
     active
       .filter((h) => h.period === period)
@@ -222,6 +230,9 @@ export async function getDayEditView(
           habit,
           progress: evaluatePeriod(habit, own, range),
           entries: own.filter((e) => isInRange(e.date, range)),
+          note: notes.get(habit.id) ?? null,
+          // 読み込んだ記録は習慣を始めた月から今日までなので、前回の量もここから決まる
+          previousQuantity: previousQuantity(habit, own, date),
         };
       });
   const weekRange = periodRange("weekly", date, settings.weekStart);

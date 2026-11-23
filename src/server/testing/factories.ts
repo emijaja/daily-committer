@@ -2,7 +2,7 @@
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { entries, user, userSettings } from "@/db/schema";
+import { entries, memos, user, userSettings } from "@/db/schema";
 import type { LogicalDate } from "@/domain/types";
 import { insertHabits, type HabitValues } from "@/server/repositories/habits";
 
@@ -85,4 +85,18 @@ export async function entriesOf(habitId: string) {
     .from(entries)
     .where(eq(entries.habitId, habitId))
     .orderBy(entries.date, entries.createdAt);
+}
+
+/** そのユーザーのメモ（ぼやき・習慣へのひとこと。日付の古い順） */
+export async function memosOf(userId: string) {
+  return db
+    .select({
+      date: memos.date,
+      body: memos.body,
+      habitId: memos.habitId,
+      categoryId: memos.categoryId,
+    })
+    .from(memos)
+    .where(eq(memos.userId, userId))
+    .orderBy(memos.date, memos.createdAt);
 }

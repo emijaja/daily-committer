@@ -33,12 +33,17 @@ export function RecordSection() {
   return (
     <>
       <CatalogSection id="check-box" title="CheckBox / AddButton">
-        <Sample label="未・完了・次に押す所（黄色）・押せる見本">
+        <Sample label="未・完了・次に押す所（黄色）・押せる見本（長押しでひとこと）">
           <div className="flex items-center gap-4">
             <CheckBox label="未" checked={false} />
             <CheckBox label="完了" checked />
             <CheckBox label="次に押す所" checked={false} highlight />
-            <CheckBox label="押せる" checked={checked} onChange={setChecked} />
+            <CheckBox
+              label="押せる"
+              checked={checked}
+              onChange={setChecked}
+              onLongPress={() => setLog("□を長押しした（ひとこと）")}
+            />
           </div>
         </Sample>
         <Sample label="＋（未達成）・達成後（黒塗りのチェック）・長押しできる見本">
@@ -48,7 +53,7 @@ export function RecordSection() {
             <AddButton
               label="長押し"
               onPress={() => setLog("＋を押した")}
-              onLongPress={() => setLog("＋を長押しした")}
+              onLongPress={() => setLog("＋を長押しした（ひとこと）")}
             />
             <span className="text-caption text-gray-500">{log}</span>
           </div>

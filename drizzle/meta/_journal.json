@@ -22,6 +22,27 @@
       "when": 1794064361016,
       "tag": "0002_open_colonel_america",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795257344873,
+      "tag": "0003_living_echo",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795437740155,
+      "tag": "0004_memos",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795437745263,
+      "tag": "0005_drop_entry_notes",
+      "breakpoints": true
     }
   ]
 }
