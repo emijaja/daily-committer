@@ -30,6 +30,9 @@ const optionalText = (max: number) =>
     .nullable()
     .transform((value) => (value ? value : null));
 
+/** 習慣へのひとこと。空（空白だけ）なら消す。長さの上限はない（メモと同じ） */
+export const noteBodySchema = z.string().trim();
+
 export const habitNameSchema = z.string().trim().min(1).max(50);
 
 export const habitInputSchema = z

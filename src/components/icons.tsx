@@ -17,6 +17,7 @@ export type IconName =
   | "pencil"
   | "backspace"
   | "target"
+  | "note"
   | "tab-record"
   | "tab-review"
   | "tab-habits";
@@ -67,6 +68,12 @@ const ICONS: Record<IconName, IconDef> = {
     viewBox: 14,
     strokeWidth: 1.4,
     d: "M7 1.75A5.25 5.25 0 1 0 7 12.25A5.25 5.25 0 1 0 7 1.75ZM7 4.8125A2.1875 2.1875 0 1 0 7 9.1875A2.1875 2.1875 0 1 0 7 4.8125Z",
+  },
+  /** ひとことの印（吹き出し）。①②の行で、ひとことがある日に名前の下に出す */
+  note: {
+    viewBox: 12,
+    strokeWidth: 1.3,
+    d: "M1.5 1.75H10.5V8H5.25L2.75 10.25V8H1.5Z",
   },
   "tab-record": {
     viewBox: 22,

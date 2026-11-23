@@ -5,6 +5,7 @@ import { BottomSheet } from "@/components/BottomSheet";
 import { NumPad } from "@/components/NumPad";
 import { Pill } from "@/components/Pill";
 import { QuantityIncrementSheet } from "@/components/QuantityIncrementSheet";
+import { NoteSheet } from "@/components/NoteSheet";
 import { QuantityTotalSheet } from "@/components/QuantityTotalSheet";
 import { CatalogSection, FixedFrame, Sample } from "./catalog-ui";
 
@@ -97,7 +98,7 @@ export function SheetSection() {
         title="QuantityTotalSheet（開いた状態）"
         figma="2098:5748"
       >
-        <Sample label="未達成（20 / 30 回）">
+        <Sample label="未達成（20 / 30 回）・前回 25">
           <FixedFrame height={520}>
             <QuantityTotalSheet
               open
@@ -108,6 +109,7 @@ export function SheetSection() {
               unit="回"
               target={30}
               initialValue={20}
+              previous={25}
               onSubmit={noop}
             />
           </FixedFrame>
@@ -150,7 +152,7 @@ export function SheetSection() {
         title="QuantityIncrementSheet（開いた状態）"
         figma="2101:5429"
       >
-        <Sample label="記録2件（6.2 / 10 km）">
+        <Sample label="記録2件（6.2 / 10 km）・前回 3 km">
           <FixedFrame height={660}>
             <QuantityIncrementSheet
               open
@@ -164,6 +166,7 @@ export function SheetSection() {
               total={6.2}
               items={RUNNING_ITEMS}
               onItemPress={noop}
+              previous={3}
               addLabel="今日（金 11/1）の分を追加"
               onAdd={noop}
             />
@@ -184,6 +187,41 @@ export function SheetSection() {
               items={[]}
               addLabel="今日（金 11/1）の分を追加"
               onAdd={noop}
+            />
+          </FixedFrame>
+        </Sample>
+      </CatalogSection>
+
+      <CatalogSection
+        id="note-sheet"
+        title="NoteSheet（開いた状態）"
+        figma="2176:5644"
+      >
+        <Sample label="⑩-a 記録した日・ひとことあり">
+          <FixedFrame height={420}>
+            <NoteSheet
+              open
+              onClose={noop}
+              habitName="読書"
+              dateLabel="11月1日（金）"
+              recorded
+              initialBody="3章まで。眠くて頭に入らず、同じところを2回読んだ。"
+              onSave={noop}
+              onDelete={noop}
+            />
+          </FixedFrame>
+        </Sample>
+        <Sample label="⑩-b 未記録の日・まだ書いていない">
+          <FixedFrame height={440}>
+            <NoteSheet
+              open
+              onClose={noop}
+              habitName="早起き"
+              dateLabel="11月1日（金）"
+              recorded={false}
+              initialBody={null}
+              onSave={noop}
+              onDelete={noop}
             />
           </FixedFrame>
         </Sample>

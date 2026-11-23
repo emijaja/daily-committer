@@ -206,20 +206,6 @@ describe("entries repository と DB の制約", () => {
     expect(await entriesRepo.findFirstEntryDate(db, me, "x")).toBeNull();
   });
 
-  it("findLatestQuantity はいちばん新しい記録の量を返す", async () => {
-    const me = await createUser();
-    const habit = (await habitsRepo.findHabit(
-      db,
-      me,
-      await createHabit(me, incrementHabit()),
-    ))!;
-    expect(await entriesRepo.findLatestQuantity(db, me, habit.id)).toBeNull();
-    await entriesRepo.insertEntry(db, me, habit, d("2024-11-02"), 3);
-    await entriesRepo.insertEntry(db, me, habit, d("2024-11-02"), 2.5);
-    await entriesRepo.insertEntry(db, me, habit, d("2024-11-01"), 9);
-    expect(await entriesRepo.findLatestQuantity(db, me, habit.id)).toBe(2.5);
-  });
-
   it("mergeSameDayEntries は同じ日の複数行を1行にまとめ、量を合計する", async () => {
     const me = await createUser();
     const habit = (await habitsRepo.findHabit(

@@ -41,6 +41,16 @@ export interface RecordRow {
    * （①-a の「昨日で途切れました」）。getRecordView は必ず入れる
    */
   streak?: { current: number; endedLastPeriod: boolean };
+  /**
+   * 記録する日（① は今日、② は選んだ日）の、この習慣へのひとこと。なければ null。
+   * getRecordView・getDayEditView は必ず入れる
+   */
+  note?: string | null;
+  /**
+   * 量のシートの「前回」チップの量（domain/note.ts の previousQuantity）。
+   * 量の習慣でない・前回がないなら null。getRecordView・getDayEditView は必ず入れる
+   */
+  previousQuantity?: number | null;
 }
 
 export interface RecordView {
