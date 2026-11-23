@@ -11,7 +11,7 @@
 |---|---|
 | [product-and-flow.md](product-and-flow.md) | コンセプト、情報設計、画面一覧、画面遷移、データの考え方 |
 | [visual-style.md](visual-style.md) | 採用テイスト（みんなの銀行風）の色・文字・形・コンポーネント規則 |
-| [character.md](character.md) | キャラクター（ナマケモノ）の仕様・表情・使い方・セリフ方針 |
+| [character.md](character.md) | キャラクター（ナマケモノ・狛犬）の仕様・表情・使い方・セリフ方針 |
 | [screens.md](screens.md) | 全画面の構成と文言（Figma のフレームと対応） |
 | [figma-map.md](figma-map.md) | Figma ファイル内のセクション・ノードID対応表 |
 | [tokens.json](tokens.json) | デザイントークン（色・文字・余白・線・角丸） |
@@ -23,6 +23,7 @@
   - セクション「Minna style / 全画面（ナマケモノ）」 `2098:5142`
   - セクション「Minna style / オンボーディング・空の状態」 `2105:5301`
   - コンポーネントセット `mascot/sloth` `2095:5161`
+  - コンポーネントセット `mascot/komainu` `2192:5916`（メモの相棒。使う画面は検討中）
 - それ以外のセクション（v1・v2ワイヤー、テイスト比較、キャラ案）は検討の履歴。
 
 ## 未決定・保留事項
