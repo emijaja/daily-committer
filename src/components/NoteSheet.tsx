@@ -1,9 +1,8 @@
 "use client";
 
 import { useId, useState } from "react";
-import { NOTE_MAX_LENGTH, noteLength } from "@/domain/note";
+import { noteLength } from "@/domain/note";
 import { BottomSheet } from "./BottomSheet";
-import { cx } from "./cx";
 import { Marker } from "./Marker";
 import { Pill } from "./Pill";
 
@@ -25,7 +24,7 @@ export interface NoteSheetProps {
 }
 
 /**
- * ⑩-a/b ひとことシート（□／＋の長押しで開く）。習慣・日ごとに1つ、140字まで。
+ * ⑩-a/b ひとことシート（□／＋の長押しで開く）。習慣・日ごとに1つ。長さの上限はない。
  * 長押しでは記録の状態は変えない（未記録の日にも書ける）。開くたびに入力はいまのひとことに戻る。
  */
 export function NoteSheet({
@@ -47,7 +46,6 @@ export function NoteSheet({
     if (open) setBody(initialBody ?? "");
   }
   const length = noteLength(body.trim());
-  const tooLong = length > NOTE_MAX_LENGTH;
 
   return (
     <BottomSheet
@@ -80,15 +78,10 @@ export function NoteSheet({
       />
       <div className="mt-2 flex items-center justify-between gap-3 text-gray-500">
         <span className="text-[10px] font-medium">
-          {tooLong ? `${NOTE_MAX_LENGTH} 字までです` : "この日・この習慣に1つ"}
+          この日・この習慣に1つ
         </span>
-        <span
-          className={cx(
-            "font-latin text-[11px] font-bold",
-            tooLong && "text-black",
-          )}
-        >
-          {length} / {NOTE_MAX_LENGTH}
+        <span className="text-[11px] font-bold">
+          <span className="font-latin">{length}</span>字
         </span>
       </div>
       <div className="mt-6 flex items-center gap-4">
@@ -102,7 +95,6 @@ export function NoteSheet({
         <Pill
           block={false}
           className="flex-1"
-          disabled={tooLong}
           onClick={() => onSave(body)}
         >
           保存する

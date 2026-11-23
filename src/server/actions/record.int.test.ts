@@ -136,16 +136,17 @@ describe("記録の Server Actions", () => {
     expect(await entriesOf(habitId)).toEqual([]);
   });
 
-  it("ひとことを保存し、空で消す。ひとことの長さが上限を超えるとエラーを返す", async () => {
+  it("ひとことを保存し、空で消す。長いひとことも保存できる", async () => {
     const habitId = await createHabit(auth.userId);
     expect(await saveNoteAction({ habitId, body: " 二度寝 " })).toEqual({
       ok: true,
       data: { note: "二度寝", date: "2024-11-01" },
     });
     expect(revalidatePath).toHaveBeenCalled();
-    expect(await saveNoteAction({ habitId, body: "あ".repeat(141) })).toEqual({
-      ok: false,
-      error: "ひとことは 140 字までです",
+    const long = "あ".repeat(2000);
+    expect(await saveNoteAction({ habitId, body: long })).toEqual({
+      ok: true,
+      data: { note: long, date: "2024-11-01" },
     });
     expect(await saveNoteAction({ habitId, body: "" })).toEqual({
       ok: true,

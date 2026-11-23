@@ -1,11 +1,8 @@
 /**
- * 記録へのひとこと（docs/web/domain-spec.md 2章 entry_notes）と、量のシートの「前回」チップ。
+ * 習慣へのひとこと（docs/web/domain-spec.md 2章 memos）と、量のシートの「前回」チップ。
  * I/O なしの純粋関数。
  */
 import type { Entry, Habit, LogicalDate } from "./types";
-
-/** ひとことの長さの上限（文字数。絵文字も1文字と数える） */
-export const NOTE_MAX_LENGTH = 140;
 
 /** ひとことの文字数。UTF-16 の長さではなくコードポイントで数える（絵文字を2文字にしない） */
 export function noteLength(body: string): number {

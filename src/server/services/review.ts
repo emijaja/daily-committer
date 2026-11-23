@@ -34,7 +34,7 @@ import type {
   Settings,
 } from "@/domain/types";
 import * as entriesRepo from "@/server/repositories/entries";
-import * as notesRepo from "@/server/repositories/entry-notes";
+import * as notesRepo from "@/server/repositories/memos";
 import * as habitsRepo from "@/server/repositories/habits";
 import { toHabit } from "@/server/repositories/habits";
 import { todayFor } from "./clock";

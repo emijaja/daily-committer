@@ -1,4 +1,7 @@
+import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
+import { db } from "@/db/client";
+import { habits } from "@/db/schema";
 import {
   checkHabit,
   createHabit,
@@ -6,6 +9,7 @@ import {
   d,
   entriesOf,
   incrementHabit,
+  memosOf,
   totalHabit,
 } from "@/server/testing/factories";
 import {
@@ -231,15 +235,36 @@ describe("saveNote（□／＋の長押しのひとこと）", () => {
     expect(view.rows[0]?.note).toBeNull();
   });
 
-  it("140字を超えると拒否する（絵文字も1文字と数える）", async () => {
+  it("長さの上限はない（メモと同じ）", async () => {
     const me = await createUser();
     const habitId = await createHabit(me);
-    expect(await saveNote(me, habitId, day, "😴".repeat(140))).toHaveLength(
-      280,
-    );
-    await expect(saveNote(me, habitId, day, "あ".repeat(141))).rejects.toThrow(
-      "ひとことは 140 字までです",
-    );
+    const long = "あ".repeat(5000);
+    expect(await saveNote(me, habitId, day, long)).toBe(long);
+  });
+
+  it("ひとことは memos に習慣へのひとことの行として入る。習慣・日ごとに1行", async () => {
+    const me = await createUser();
+    const habitId = await createHabit(me);
+    await saveNote(me, habitId, day, "一回目");
+    await saveNote(me, habitId, day, "書き直し");
+    expect(await memosOf(me)).toEqual([
+      { date: "2024-11-01", body: "書き直し", habitId, categoryId: null },
+    ]);
+  });
+
+  it("習慣を削除しても、ひとことはカテゴリなしのメモとして残る", async () => {
+    const me = await createUser();
+    const habitId = await createHabit(me);
+    await saveNote(me, habitId, day, "残しておきたい");
+    await db.delete(habits).where(eq(habits.id, habitId));
+    expect(await memosOf(me)).toEqual([
+      {
+        date: "2024-11-01",
+        body: "残しておきたい",
+        habitId: null,
+        categoryId: null,
+      },
+    ]);
   });
 
   it("他人の習慣には書けない", async () => {

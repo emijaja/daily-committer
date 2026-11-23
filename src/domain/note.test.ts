@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { d, makeEntry, makeHabit } from "./fixtures";
 import {
-  NOTE_MAX_LENGTH,
   normalizeNote,
   noteLength,
   previousQuantity,
@@ -11,10 +10,6 @@ describe("noteLength", () => {
   it("日本語も絵文字も1文字と数える", () => {
     expect(noteLength("読書")).toBe(2);
     expect(noteLength("😴zz")).toBe(3);
-  });
-
-  it("上限は140字", () => {
-    expect(NOTE_MAX_LENGTH).toBe(140);
   });
 });
 

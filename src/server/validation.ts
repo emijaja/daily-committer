@@ -4,7 +4,6 @@
  * times_per_period_scope）と同じにしている。
  */
 import { z } from "zod";
-import { NOTE_MAX_LENGTH, noteLength } from "@/domain/note";
 import type { LogicalDate } from "@/domain/types";
 
 /** numeric(12, 3) に収まる上限 */
@@ -31,14 +30,8 @@ const optionalText = (max: number) =>
     .nullable()
     .transform((value) => (value ? value : null));
 
-/** 記録へのひとこと。空（空白だけ）なら消す。長さは絵文字も1文字と数える */
-export const noteBodySchema = z
-  .string()
-  .trim()
-  .refine(
-    (value) => noteLength(value) <= NOTE_MAX_LENGTH,
-    `ひとことは ${NOTE_MAX_LENGTH} 字までです`,
-  );
+/** 習慣へのひとこと。空（空白だけ）なら消す。長さの上限はない（メモと同じ） */
+export const noteBodySchema = z.string().trim();
 
 export const habitNameSchema = z.string().trim().min(1).max(50);
 

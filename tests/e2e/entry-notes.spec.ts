@@ -39,7 +39,7 @@ test("□の長押しで、未記録のままひとことを書け、書き直�
     sheet.getByText("記録はつけずに、ひとことだけ残します"),
   ).toBeVisible();
   await sheet.getByLabel("早起きへのひとこと").fill("二度寝した。");
-  await expect(sheet.getByText("6 / 140")).toBeVisible();
+  await expect(sheet.getByText("6字")).toBeVisible();
   await sheet.getByRole("button", { name: "保存する" }).click();
   await expect(sheet).toBeHidden();
 
