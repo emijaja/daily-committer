@@ -4,6 +4,11 @@
  * times_per_period_scope）と同じにしている。
  */
 import { z } from "zod";
+import {
+  MEMO_CATEGORY_NAME_MAX,
+  MEMO_DAILY_TARGET_MAX,
+  MEMO_PROMPT_MAX,
+} from "@/domain/memo";
 import type { LogicalDate } from "@/domain/types";
 
 /** numeric(12, 3) に収まる上限 */
@@ -32,6 +37,20 @@ const optionalText = (max: number) =>
 
 /** 習慣へのひとこと。空（空白だけ）なら消す。長さの上限はない（メモと同じ） */
 export const noteBodySchema = z.string().trim();
+
+/** メモの本文。前後の空白を除く。長さの上限はない */
+export const memoBodySchema = z.string().trim();
+
+/** メモのカテゴリ（⑨-c）。名前は必須、お題は空なら null（既定の文）、目標は null なら目標なし */
+export const memoCategoryInputSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "名前を入れてください")
+    .max(MEMO_CATEGORY_NAME_MAX),
+  prompt: optionalText(MEMO_PROMPT_MAX),
+  dailyTarget: z.number().int().min(1).max(MEMO_DAILY_TARGET_MAX).nullable(),
+});
 
 export const habitNameSchema = z.string().trim().min(1).max(50);
 

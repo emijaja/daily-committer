@@ -4,6 +4,7 @@
  */
 import type { PeriodProgress, CompletionSummary } from "@/domain/achievement";
 import type { GrassCell } from "@/domain/grass";
+import type { MemoCategory, MemoSpeech, TargetStats } from "@/domain/memo";
 import type { Grumble } from "@/domain/grumble";
 import type { StreakUnit } from "@/domain/habit-detail";
 import type { ReviewItem } from "@/domain/review";
@@ -151,6 +152,86 @@ export interface HabitDetailView {
   /** 今月の達成日数など、数字の箱4つ */
   stats: { label: string; value: string; unit?: string }[];
   grumble: Grumble | null;
+}
+
+// ── ⑨ メモ ─────────────────────────────
+
+/** 一覧・過去のメモのカードに出す1件 */
+export interface MemoItem {
+  id: string;
+  date: LogicalDate;
+  body: string;
+  categoryId: string | null;
+  /** タグに出す名前：カテゴリ名、習慣へのひとことなら習慣名。どちらもなければ null */
+  tag: string | null;
+  /** 習慣へのひとことなら true（編集画面ではカテゴリを選べない） */
+  isHabitNote: boolean;
+  /** 一覧の時刻（例 21:04）。ユーザーのタイムゾーンで、書いた時刻 */
+  time: string;
+}
+
+/** ⑨ の「1年前の今日の自分」・⑨-d の「ふと、あの日の自分」 */
+export interface PastMemoCard {
+  heading: string;
+  memo: MemoItem;
+}
+
+/** 書く画面のカレンダーの、日ごとの状態（目標を達成・書いた・なし） */
+export type MemoDayStatus = "achieved" | "written" | "none";
+
+/** ⑨ メモ：書く の表示用データ */
+export interface MemoHomeView {
+  today: LogicalDate;
+  /** 吹き出しの下の時刻（例 21:04） */
+  clock: string;
+  categories: MemoCategory[];
+  speech: MemoSpeech;
+  /** 「別のメモ」で順に出す過去のメモ（なければ空） */
+  pastMemos: PastMemoCard[];
+  /** 今日の、カテゴリごとの件数（カテゴリの ID → 件数） */
+  todayCounts: Record<string, number>;
+  /** 今日書いたメモの件数（すべて。習慣へのひとことも含む） */
+  todayTotal: number;
+  /** 1日の目標があるカテゴリの達成（並び順） */
+  targets: TargetStats[];
+  /** 書きかけのメモがあれば、そのカテゴリ名と日付 */
+  draft: { date: LogicalDate; categoryName: string | null } | null;
+}
+
+/** ⑨-b 書く・メモの編集 の表示用データ */
+export interface MemoWriteView {
+  today: LogicalDate;
+  weekStart: WeekStart;
+  categories: MemoCategory[];
+  /** 新しく書くときは null。編集のときはそのメモ */
+  memo: MemoItem | null;
+  /** 初めに入れておく日付・カテゴリ・本文（編集のメモ、または下書き、または指定・お題の値） */
+  initial: { date: LogicalDate; categoryId: string | null; body: string };
+  /** 下書きから続きを書いているなら true（送ったら下書きを消す） */
+  fromDraft: boolean;
+  /** 新しく書く画面で、ほかに書きかけのメモがあれば（「下書き」の入り口） */
+  draft: { date: LogicalDate; categoryName: string | null } | null;
+  /** 日付を選ぶカレンダー：12か月前の月の1日から今日までの、日ごとの状態 */
+  calendar: { date: LogicalDate; status: MemoDayStatus }[];
+}
+
+/** ⑨-d すべてのメモ の表示用データ */
+export interface MemoListView {
+  today: LogicalDate;
+  year: number;
+  /** 1〜12 */
+  month: number;
+  /** 絞り込みのカテゴリ。null なら「すべて」 */
+  categoryId: string | null;
+  categories: MemoCategory[];
+  /** その月の件数 */
+  count: number;
+  /** 日ごと（新しい日から）。同じ日は書いた順の新しい順 */
+  days: { date: LogicalDate; memos: MemoItem[] }[];
+  pastMemos: PastMemoCard[];
+  /** 前の月・次の月に移れるか（次は今月まで） */
+  canPrev: boolean;
+  canNext: boolean;
 }
 
 export type { Settings };
