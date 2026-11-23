@@ -9,6 +9,7 @@ import type { MemoCategory, TargetStats } from "@/domain/memo";
 import type { MemoHomeView } from "@/server/services/types";
 import { draftLabel, jaDate, speechLines, writeHref } from "./memo-format";
 import { PastMemo } from "./past-memo";
+import { WriteFab } from "./write-fab";
 
 const DOW = ["日", "月", "火", "水", "木", "金", "土"] as const;
 
@@ -65,13 +66,7 @@ export function MemoHome({ view }: { view: MemoHomeView }) {
         </div>
       ))}
 
-      <Link
-        href={writeHref({ categoryId: speech.categoryId })}
-        aria-label="メモを書く"
-        className="fixed right-[max(20px,calc((100vw-430px)/2+20px))] bottom-[calc(max(env(safe-area-inset-bottom),28px)+64px)] z-30 flex size-[58px] items-center justify-center rounded-full bg-black text-white shadow-[0_2px_8px_rgba(0,0,0,0.25)]"
-      >
-        <Icon name="compose" size={26} />
-      </Link>
+      <WriteFab href={writeHref({ categoryId: speech.categoryId })} />
     </div>
   );
 }

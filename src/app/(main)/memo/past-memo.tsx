@@ -10,6 +10,8 @@ import { fullJaDate, monthHref } from "./memo-format";
 export interface PastMemoProps {
   /** 出す順の候補（サーバーで決めたもの）。空なら何も出さない */
   cards: readonly PastMemoCard[];
+  /** 見出しを固定する（⑨-d は「ふと、あの日の自分」）。省略なら候補ごとの見出し */
+  heading?: string;
   className?: string;
 }
 
@@ -17,15 +19,16 @@ export interface PastMemoProps {
  * ⑨ の「1年前の今日の自分」・⑨-d の「ふと、あの日の自分」。
  * 「別のメモ」で次の候補に進む（最後まで行ったら最初に戻る）。
  */
-export function PastMemo({ cards, className }: PastMemoProps) {
+export function PastMemo({ cards, heading, className }: PastMemoProps) {
   const [index, setIndex] = useState(0);
   const card = cards[index % Math.max(cards.length, 1)];
   if (!card) return null;
   const { memo } = card;
+  const title = heading ?? card.heading;
   return (
-    <section aria-label={card.heading} className={className}>
+    <section aria-label={title} className={className}>
       <div className="flex items-center gap-2">
-        <h2 className="text-[11px] font-bold">{card.heading}</h2>
+        <h2 className="text-[11px] font-bold">{title}</h2>
         <span aria-hidden="true" className="h-px flex-1 bg-gray-300" />
         {cards.length > 1 ? (
           <button
