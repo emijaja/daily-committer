@@ -46,8 +46,12 @@ export const memoCategoryInputSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, "名前を入れてください")
-    .max(MEMO_CATEGORY_NAME_MAX),
+    // custom の issue にして、メッセージを画面に返す（actions/run.ts）
+    .refine((name) => name.length > 0, "名前を入れてください")
+    .refine(
+      (name) => [...name].length <= MEMO_CATEGORY_NAME_MAX,
+      `名前は${MEMO_CATEGORY_NAME_MAX}文字までです`,
+    ),
   prompt: optionalText(MEMO_PROMPT_MAX),
   dailyTarget: z.number().int().min(1).max(MEMO_DAILY_TARGET_MAX).nullable(),
 });
