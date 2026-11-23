@@ -65,6 +65,7 @@ const INDEX = [
   ["summary-card", "SummaryCard"],
   ["toast", "Toast"],
   ["mascot", "Mascot"],
+  ["mascot-komainu", "Mascot（狛犬）"],
   ["speech", "Speech"],
   ["grass", "GrassHeatmap"],
   ["calendar-modal", "CalendarModal"],
