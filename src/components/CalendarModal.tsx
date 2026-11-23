@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import type { GrassCell } from "@/domain/grass";
 import type { LogicalDate, WeekStart } from "@/domain/types";
 import {
@@ -33,6 +33,10 @@ export interface CalendarModalProps {
   onClose: () => void;
   /** 「今日」を押したとき */
   onToday?: () => void;
+  /** 下の案内（既定：日付を選ぶと、その日の記録を開きます） */
+  hint?: string;
+  /** 日付の下の印の凡例（⑨-b など）。案内の上に出す */
+  legend?: ReactNode;
 }
 
 /** 日付を選ぶモーダル（⑥-b）。白・黒枠 1.5px・角丸0、幅 335。日付の下に草色の小さな四角 */
@@ -51,6 +55,8 @@ export function CalendarModal({
   canNext = true,
   onClose,
   onToday,
+  hint = "日付を選ぶと、その日の記録を開きます",
+  legend,
 }: CalendarModalProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -187,10 +193,9 @@ export function CalendarModal({
           })}
         </div>
 
+        {legend ? <div className="mt-3">{legend}</div> : null}
         <div className="mt-3 flex items-center justify-between border-t border-gray-300 pt-1">
-          <p className="text-[9px] font-medium text-gray-500">
-            日付を選ぶと、その日の記録を開きます
-          </p>
+          <p className="text-[9px] font-medium text-gray-500">{hint}</p>
           {onToday ? (
             <button
               type="button"
