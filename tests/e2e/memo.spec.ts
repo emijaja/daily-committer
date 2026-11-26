@@ -57,6 +57,11 @@ test("はじめて開くと既定のカテゴリができ、お題のカテゴ�
     date: today,
     body: "朝の散歩で、金木犀の匂いがした",
   });
+
+  // もう一度開くと、前に送った本文は残らず空から書ける（離れたページを Activity が残していても）
+  await page.getByRole("link", { name: "メモを書く" }).click();
+  await expect(page).toHaveURL(/\/memo\/new/);
+  await expect(page.getByLabel("メモの本文")).toHaveValue("");
 });
 
 test("書いている途中でキャンセルすると下書きに保存でき、続きを書いて送ると下書きは消える", async ({
