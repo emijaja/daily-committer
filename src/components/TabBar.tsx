@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cx } from "./cx";
 import { Icon, type IconName } from "./icons";
 
-export type TabKey = "record" | "review" | "habits";
+export type TabKey = "record" | "review" | "memo" | "habits";
 
 const TABS: readonly {
   key: TabKey;
@@ -12,13 +12,14 @@ const TABS: readonly {
 }[] = [
   { key: "record", label: "記録", href: "/record/today", icon: "tab-record" },
   { key: "review", label: "振り返り", href: "/review", icon: "tab-review" },
+  { key: "memo", label: "書く", href: "/memo", icon: "tab-write" },
   { key: "habits", label: "習慣", href: "/habits", icon: "tab-habits" },
 ];
 
 export interface TabBarProps {
   /** 選択中のタブ */
   current: TabKey;
-  /** タブの行き先を変える場合（既定は /record/today・/review・/habits） */
+  /** タブの行き先を変える場合（既定は /record/today・/review・/memo・/habits） */
   hrefs?: Partial<Record<TabKey, string>>;
   className?: string;
 }

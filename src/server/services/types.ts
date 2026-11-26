@@ -209,6 +209,8 @@ export interface MemoWriteView {
   initial: { date: LogicalDate; categoryId: string | null; body: string };
   /** 下書きから続きを書いているなら true（送ったら下書きを消す） */
   fromDraft: boolean;
+  /** 今日の、カテゴリごとの件数（お題の「（3つめ）」に使う） */
+  todayCounts: Record<string, number>;
   /** 新しく書く画面で、ほかに書きかけのメモがあれば（「下書き」の入り口） */
   draft: { date: LogicalDate; categoryName: string | null } | null;
   /** 日付を選ぶカレンダー：12か月前の月の1日から今日までの、日ごとの状態 */

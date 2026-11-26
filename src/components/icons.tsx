@@ -20,7 +20,11 @@ export type IconName =
   | "note"
   | "tab-record"
   | "tab-review"
-  | "tab-habits";
+  | "tab-habits"
+  | "tab-write"
+  | "compose"
+  | "calendar"
+  | "chevron-down";
 
 interface IconDef {
   viewBox: number;
@@ -90,6 +94,25 @@ const ICONS: Record<IconName, IconDef> = {
     strokeWidth: 2.2,
     d: "M7.5625 5.5H19.25M7.5625 11H19.25M7.5625 16.5H19.25M2.75 5.5H3.4375M2.75 11H3.4375M2.75 16.5H3.4375",
   },
+  /** 下部タブの「書く」（⑨ メモ） */
+  "tab-write": {
+    viewBox: 22,
+    strokeWidth: 2.2,
+    d: "M4 18H7.5L17.5 8L14 4.5L4 14.5V18ZM12 6.5L15.5 10",
+  },
+  /** ⑨ の右下の丸ボタン（新しく書く） */
+  compose: {
+    viewBox: 26,
+    strokeWidth: 2.2,
+    d: "M6 21H9.8L20.5 10.3L16.7 6.5L6 17.2V21ZM14.5 8.7L18.3 12.5M5 4V10M2 7H8",
+  },
+  /** ⑨-b の日付のボタン */
+  calendar: {
+    viewBox: 14,
+    strokeWidth: 1.4,
+    d: "M2.25 3.5H11.75V12.25H2.25V3.5ZM2.25 6.25H11.75M4.75 1.75V4.5M9.25 1.75V4.5",
+  },
+  "chevron-down": { viewBox: 10, strokeWidth: 1.5, d: "M2.5 4L5 6.5L7.5 4" },
 };
 
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "name"> {

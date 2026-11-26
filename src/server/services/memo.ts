@@ -141,10 +141,12 @@ export async function getMemoWriteView(
     memosRepo.listMemos(db, userId, { from: calendarFrom, to: today }),
   ]);
   const toItem = itemMaker(categories, settings.timezone);
+  const todayCounts = countByCategory(recent.filter((m) => m.date === today));
   const base = {
     today,
     weekStart: settings.weekStart,
     categories,
+    todayCounts: Object.fromEntries(todayCounts),
     calendar: calendarOf(categories, recent, calendarFrom, today),
   };
 
@@ -183,7 +185,6 @@ export async function getMemoWriteView(
   }
 
   const date = options.date && options.date <= today ? options.date : today;
-  const todayCounts = countByCategory(recent.filter((m) => m.date === today));
   const speech = memoSpeech({
     categories,
     todayCounts,

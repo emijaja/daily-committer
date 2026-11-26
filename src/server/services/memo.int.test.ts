@@ -115,6 +115,7 @@ describe("getMemoWriteView", () => {
       body: "",
     });
     expect(view.memo).toBeNull();
+    expect(view.todayCounts).toEqual({});
     const status = new Map(view.calendar.map((c) => [c.date, c.status]));
     expect(status.get(d("2026-11-20"))).toBe("achieved");
     expect(status.get(d("2026-11-19"))).toBe("written");

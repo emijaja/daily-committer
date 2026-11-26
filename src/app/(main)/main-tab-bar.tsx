@@ -7,10 +7,15 @@ import { TabBar, type TabKey } from "@/components/TabBar";
  * 今のパスから、下部タブの選択中のタブを決める（Figma に合わせる）。
  * - ⑤ 習慣の追加・編集（/habits/new、/habits/[id]/edit）と、おすすめから選ぶ（/habits/presets）は
  *   下部タブを出さない（null）。どれも習慣を追加・編集する途中の画面で、下に主ボタンがあるため
+ * - ⑨-b 書く・メモの編集（/memo/new、/memo/[id]/edit）と ⑨-c カテゴリの編集（/memo/categories/...）は
+ *   下部タブを出さない（null）。上にキャンセル・送る（保存）のある、書くための画面のため
  * - ② 記録の確認・修正は「振り返り」、③ 習慣の詳細は「習慣」、⑦ 設定は ①-a の歯車から開くので「記録」
  */
 function tabFor(pathname: string): TabKey | null {
   if (/^\/habits\/(new|presets|[^/]+\/edit)\/?$/.test(pathname)) return null;
+  if (/^\/memo\/(new|[^/]+\/edit|categories(\/.*)?)\/?$/.test(pathname))
+    return null;
+  if (pathname.startsWith("/memo")) return "memo";
   if (pathname.startsWith("/review")) return "review";
   if (pathname.startsWith("/habits")) return "habits";
   return "record";
