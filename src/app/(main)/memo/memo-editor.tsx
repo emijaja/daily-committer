@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useId, useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import { BottomSheet } from "@/components/BottomSheet";
 import { CalendarModal } from "@/components/CalendarModal";
 import { cx, HIT_AREA } from "@/components/cx";
@@ -37,13 +44,26 @@ export interface MemoEditorProps {
 }
 
 /**
+ * ⑨-b 書く／メモの編集。開くたびに入力を view.initial から作り直す。
+ * Cache Components では離れたページを消さずに <Activity> で隠して残すので、そのままだと
+ * 送ったあとやキャンセルしたあとに開き直すと、前に書いた本文が残ってしまう。
+ * 隠れるときに Effect の後片付けが走るので、そこで key を変えて中身を作り直す
+ * （node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md）。
+ */
+export function MemoEditor(props: MemoEditorProps) {
+  const [generation, setGeneration] = useState(0);
+  useLayoutEffect(() => () => setGeneration((g) => g + 1), []);
+  return <MemoEditorForm key={generation} {...props} />;
+}
+
+/**
  * ⑨-b 書く／メモの編集（Figma 2165:5524・2168:5534・2183:5701）。
  * - 上：キャンセル・（書きかけがあれば）下書き・送る（編集は保存）
  * - 日付（カレンダーで選ぶ。過去の日は「11月18日のメモとして残ります」）、狛犬のお題、カテゴリ、本文
  * - 下：お題を変える・文字数・下書き保存
  * - 書いている途中でキャンセルすると、下書きに保存するか聞く（⑨-d、Figma 2168:5593）
  */
-export function MemoEditor({ view, backHref }: MemoEditorProps) {
+function MemoEditorForm({ view, backHref }: MemoEditorProps) {
   const router = useRouter();
   const textareaId = useId();
   const editing = view.memo !== null;
