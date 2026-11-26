@@ -2,8 +2,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { AddButton, CheckBox } from "./CheckBox";
 import { NumberStepper, SegmentedControl, Toggle } from "./forms";
+import { komainuExpression, Mascot } from "./Mascot";
 import { PresetChips } from "./PresetChips";
 import { ProgressBar } from "./ProgressBar";
+import { MascotSpeech } from "./Speech";
 import { WeekDots } from "./WeekDots";
 
 describe("フォーム部品", () => {
@@ -144,5 +146,47 @@ describe("PresetChips", () => {
     expect(html.match(/disabled=""/g)).toHaveLength(1);
     expect(html).toContain("筋トレ（登録済み）");
     expect(html).toContain('href="/habits/new"');
+  });
+});
+
+describe("Mascot", () => {
+  it("既定はナマケモノで、読み上げにキャラと表情の名前を出す", () => {
+    const html = renderToStaticMarkup(<Mascot expression="happy" />);
+    expect(html).toContain('aria-label="ナマケモノ（よろこんでいる顔）"');
+  });
+
+  it("狛犬は台座つきの全身を描き、丸アイコンは頭全体を切り抜く", () => {
+    const full = renderToStaticMarkup(
+      <Mascot character="komainu" expression="normal" />,
+    );
+    expect(full).toContain('aria-label="狛犬（ふつうの顔）"');
+    expect(full).toContain("M14 124H150L154 132H10L14 124Z");
+
+    const icon = renderToStaticMarkup(
+      <Mascot character="komainu" form="icon" label="" />,
+    );
+    expect(icon).toContain('viewBox="41 11 94 94"');
+    expect(icon).toContain('aria-hidden="true"');
+  });
+
+  it("狛犬に grumpy を渡すと normal（吽）で描く", () => {
+    expect(komainuExpression("grumpy")).toBe("normal");
+    expect(komainuExpression("sleepy")).toBe("sleepy");
+    const html = renderToStaticMarkup(
+      <Mascot character="komainu" expression="grumpy" />,
+    );
+    expect(html).toContain('aria-label="狛犬（ふつうの顔）"');
+  });
+});
+
+describe("MascotSpeech", () => {
+  it("character を渡すとそのキャラで吹き出しを出す", () => {
+    const html = renderToStaticMarkup(
+      <MascotSpeech character="komainu" expression="happy" form="icon">
+        今日よかったこと、3つ教えて。
+      </MascotSpeech>,
+    );
+    expect(html).toContain('viewBox="41 11 94 94"');
+    expect(html).toContain("今日よかったこと、3つ教えて。");
   });
 });

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { Expression } from "@/domain/types";
 import { cx } from "./cx";
-import { Mascot } from "./Mascot";
+import { Mascot, type Character } from "./Mascot";
 
 export interface SpeechProps {
   /** セリフ（domain の Grumble.text など） */
@@ -49,6 +49,8 @@ export function Speech({
 }
 
 export interface MascotSpeechProps {
+  /** どのキャラか（既定 sloth。メモに関わる場面は komainu） */
+  character?: Character;
   expression: Expression;
   children: SpeechProps["children"];
   meta?: ReactNode;
@@ -62,6 +64,7 @@ export interface MascotSpeechProps {
 
 /** キャラと吹き出しを横に並べたもの */
 export function MascotSpeech({
+  character,
   expression,
   children,
   meta,
@@ -71,7 +74,12 @@ export function MascotSpeech({
   if (form === "icon") {
     return (
       <div className={cx("flex items-center gap-2", className)}>
-        <Mascot expression={expression} form="icon" label="" />
+        <Mascot
+          character={character}
+          expression={expression}
+          form="icon"
+          label=""
+        />
         <Speech size="sm" meta={meta} className="min-w-0 flex-1">
           {children}
         </Speech>
@@ -80,7 +88,7 @@ export function MascotSpeech({
   }
   return (
     <div className={cx("flex items-center gap-1", className)}>
-      <Mascot expression={expression} label="" />
+      <Mascot character={character} expression={expression} label="" />
       <Speech meta={meta} className="min-w-0 flex-1">
         {children}
       </Speech>

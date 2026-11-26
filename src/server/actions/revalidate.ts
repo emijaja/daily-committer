@@ -19,10 +19,25 @@ const RECORD_DYNAMIC_PAGES = [
   "/(main)/habits/[id]",
 ] as const;
 
-/** 記録を書き込んだあと（①②③⑥） */
+/** メモ（⑨）の画面。習慣へのひとこと（⑩）もメモの一覧・件数に出る */
+const MEMO_PAGES = ["/memo", "/memo/all", "/memo/new"] as const;
+
+const MEMO_DYNAMIC_PAGES = [
+  "/(main)/memo/[id]/edit",
+  "/(main)/memo/categories/[id]",
+] as const;
+
+/** 記録を書き込んだあと（①②③⑥）。ひとこと（⑩）はメモの画面にも出るので、それらも更新する */
 export function revalidateRecords(): void {
   for (const path of RECORD_PAGES) revalidatePath(path);
   for (const path of RECORD_DYNAMIC_PAGES) revalidatePath(path, "page");
+  revalidateMemos();
+}
+
+/** メモ・下書き・カテゴリを書き込んだあと（⑨） */
+export function revalidateMemos(): void {
+  for (const path of MEMO_PAGES) revalidatePath(path);
+  for (const path of MEMO_DYNAMIC_PAGES) revalidatePath(path, "page");
 }
 
 /** 習慣を追加・編集・過去にした・並べ替えたあと（記録の画面にも出るので、それらも更新する） */

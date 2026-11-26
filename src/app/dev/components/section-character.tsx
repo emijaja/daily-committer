@@ -10,6 +10,12 @@ const EXPRESSIONS: readonly Expression[] = [
   "sleepy",
 ];
 
+const KOMAINU_EXPRESSIONS: readonly Expression[] = [
+  "normal",
+  "happy",
+  "sleepy",
+];
+
 export function CharacterSection() {
   return (
     <>
@@ -45,6 +51,53 @@ export function CharacterSection() {
               <Mascot key={`s-${e}`} expression={e} form="icon" size={32} />
             ))}
           </div>
+        </Sample>
+      </CatalogSection>
+
+      <CatalogSection
+        id="mascot-komainu"
+        title="Mascot（狛犬）"
+        figma="2192:5916"
+      >
+        <Sample label="全身（幅 140・黄色の丸つき）normal（吽）/ happy（阿）/ sleepy">
+          <div className="grid grid-cols-2 gap-3">
+            {KOMAINU_EXPRESSIONS.map((e) => (
+              <div key={e} className="text-caption text-gray-500">
+                <Mascot character="komainu" expression={e} />
+                <div>{e}</div>
+              </div>
+            ))}
+          </div>
+        </Sample>
+        <Sample label="丸アイコン（44px）／ 小さい（32px）">
+          <div className="flex flex-wrap items-center gap-3">
+            {KOMAINU_EXPRESSIONS.map((e) => (
+              <Mascot key={e} character="komainu" expression={e} form="icon" />
+            ))}
+            {KOMAINU_EXPRESSIONS.map((e) => (
+              <Mascot
+                key={`s-${e}`}
+                character="komainu"
+                expression={e}
+                form="icon"
+                size={32}
+              />
+            ))}
+          </div>
+        </Sample>
+        <Sample label="MascotSpeech：⑨ メモ：書く（全身＋吹き出し）">
+          <MascotSpeech
+            character="komainu"
+            expression="happy"
+            meta="21:04 ・ よかったこと あと1つ"
+          >
+            {"今日よかったこと、\n3つ教えて。（3つめ）"}
+          </MascotSpeech>
+        </Sample>
+        <Sample label="MascotSpeech：⑨-b 書く（丸アイコン）">
+          <MascotSpeech character="komainu" expression="happy" form="icon">
+            今日よかったこと、3つ教えて。（3つめ）
+          </MascotSpeech>
         </Sample>
       </CatalogSection>
 
