@@ -330,7 +330,7 @@ function CategoryChips({
 }: {
   categories: MemoWriteView["categories"];
   value: string | null;
-  onChange: (id: string | null) => void;
+  onChange: (id: string) => void;
 }) {
   return (
     <div className="px-screen-x mt-4 flex flex-wrap gap-1.5">
@@ -343,7 +343,7 @@ function CategoryChips({
               type="button"
               role="radio"
               aria-checked={selected}
-              onClick={() => onChange(selected ? null : c.id)}
+              onClick={() => onChange(c.id)}
               className={cx(
                 "rounded-pill h-7 border-[1.5px] border-black px-3 text-[12px] font-bold",
                 selected ? "bg-black text-white" : "bg-white text-black",
@@ -355,7 +355,7 @@ function CategoryChips({
         })}
       </div>
       <Link
-        href="/memo/categories/new"
+        href="/memo/categories/new?back=%2Fmemo%2Fnew"
         aria-label="カテゴリを足す"
         className="rounded-pill flex h-7 items-center border-[1.5px] border-black px-3 text-[12px] font-bold"
       >
